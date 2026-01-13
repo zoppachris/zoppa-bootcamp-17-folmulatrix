@@ -5,16 +5,19 @@
          static void Main(string[] args)
         {
             FooBarIteration();
+
+            // Foobar Iteration with input
+            Console.WriteLine("\nYou can iterate Foobar with number input.");
+            int inputIteration = InputInteger();
+            FooBarIteration(inputIteration);
         }
 
-        static void FooBarIteration()
+        static void FooBarIteration(int countIteration = 15)
         {
             Console.WriteLine($"---Foobar Iteration---");
-
-            int n = InputInteger();
             
-            Console.WriteLine($"Foobar for {n} iteration : ");
-            for (int i = 1; i <= n; i++)
+            Console.WriteLine($"Foobar for {countIteration} iteration : ");
+            for (int i = 1; i <= countIteration; i++)
             {
                 switch (i)
                 {
@@ -42,7 +45,7 @@
             int number = 1;
             bool isValidInput = false;
 
-            Console.WriteLine("Please enter a number (ex : 15) : ");
+            Console.WriteLine("Please enter a number : ");
 
             while(!isValidInput)
             {
