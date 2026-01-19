@@ -19,25 +19,33 @@
             Console.WriteLine($"Foobar for {countIteration} iteration : ");
             for (int i = 1; i <= countIteration; i++)
             {
-                switch (i)
-                {
-                    case int x when (x % 3 == 0) && (x % 5 == 0):
-                        Console.WriteLine("foobar");
-                        break;
-
-                    case int x when x % 3 == 0:
-                        Console.WriteLine("foo");
-                        break;
-
-                    case int x when x % 5 == 0:
-                        Console.WriteLine("bar");
-                        break;
-
-                    default:
-                        Console.WriteLine(i);
-                        break;
-                }
+                Console.WriteLine(ReturnFooBar(i));
             }
+        }
+
+        static string ReturnFooBar(int number = 0)
+        {
+            if (number == 0)
+            {
+                return "null";
+            }
+
+            string result = number.ToString();
+
+            if (number % 3 == 0)
+            {
+                result = "foo";
+            }
+            if (number % 5 == 0)
+            {
+                result = "bar";
+            }
+            if ((number % 3 == 0) && (number % 5 == 0))
+            {
+                result = "foobar";
+            }
+
+            return result;
         }
     }
 }
