@@ -4,6 +4,13 @@ namespace LogicExercise
 {
     class Program
     {
+        static List<Rule> _rules = new List<Rule>
+        {
+            new Rule(3, "foo"),
+            new Rule(5, "bar"),
+            new Rule(7, "jazz"),
+        };
+
         static void Main(string[] args)
         {
             LogicIteration();
@@ -27,31 +34,19 @@ namespace LogicExercise
 
         static string ReturnIterate(int number = 0)
         {
-            if (number == 0)
-            {
-                return "null";
-            }
+            if (number == 0) return "null";
 
             string result = "";
 
-            if (number % 3 == 0)
+            foreach (Rule rule in _rules)
             {
-                result += "foo";
-            }
-            if (number % 5 == 0)
-            {
-                result += "bar";
-            }
-            if (number % 7 == 0)
-            {
-                result += "jazz";
-            }
-            if (string.IsNullOrEmpty(result))
-            {
-                result = number.ToString();
+                if (rule.isDivideable(number))
+                {
+                    result += rule.Value;
+                }
             }
 
-            return result;
+            return result.Length > 0 ? result : number.ToString();
         }
     }
 }
