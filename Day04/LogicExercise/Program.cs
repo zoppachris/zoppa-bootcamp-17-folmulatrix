@@ -40,7 +40,7 @@ namespace LogicExercise
 
             foreach (Rule rule in _rules)
             {
-                if (rule.isDivideable(ref number))
+                if (rule.isDivideable(number))
                 {
                     result += rule.Value;
                 }

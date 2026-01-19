@@ -11,7 +11,7 @@ namespace LogicExercise
             Value = value;
         }
 
-        public bool isDivideable(ref int number)
+        public bool isDivideable(int number)
         {
             return number % Divisor == 0;
         }
