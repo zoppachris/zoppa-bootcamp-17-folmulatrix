@@ -1,4 +1,6 @@
-﻿namespace LogicExercise
+﻿using Utils;
+
+namespace LogicExercise
 {
     class Program
     {
