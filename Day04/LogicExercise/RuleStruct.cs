@@ -1,9 +1,9 @@
 namespace LogicExercise
 {
-    public class Rule
+    public struct Rule
     {
         public int Divisor { get; }
-        public string Value {get;}
+        public string Value { get; }
 
         public Rule(int divisor, string value)
         {
@@ -11,7 +11,7 @@ namespace LogicExercise
             Value = value;
         }
 
-        public bool isDivideable(int number)
+        public bool isDivideable(ref int number)
         {
             return number % Divisor == 0;
         }
