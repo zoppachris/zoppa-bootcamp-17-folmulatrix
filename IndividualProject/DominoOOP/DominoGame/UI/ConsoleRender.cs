@@ -30,6 +30,7 @@ namespace DominoGame.UI
             Console.WriteLine("==============================");
 
             RenderUtil.RenderBoard(e.Board.Dominoes.ToList().AsReadOnly());
+            Console.WriteLine();
             RenderUtil.RenderHand(e.Player.Hand);
         }
         private void OnActionExecuted(object? sender, ActionExecutedEventArgs e)
@@ -51,7 +52,8 @@ namespace DominoGame.UI
 
             if (!e.IsBlocked && e.Winner != null)
             {
-                Console.WriteLine($"Winner: {e.Winner.Name}");
+                Console.WriteLine($"Congratulation {e.Winner.Name} Win!!!");
+                Console.WriteLine($"{e.Winner.Name} score : {e.Winner.Score}");
             }
             else
             {

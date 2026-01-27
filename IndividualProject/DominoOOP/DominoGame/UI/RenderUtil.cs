@@ -20,7 +20,7 @@ namespace DominoGame.UI
         {
             return new[]
             {
-                $"[{d.LeftPip}|{d.RightPip}]"
+                $"[{(int)d.LeftPip}|{(int)d.RightPip}]"
             };
         }
 
@@ -28,9 +28,9 @@ namespace DominoGame.UI
         {
             return new[]
             {
-                $"[{d.LeftPip}]",
+                $"[{(int)d.LeftPip}]",
                 $"[|]",
-                $"[{d.RightPip}]"
+                $"[{(int)d.RightPip}]"
             };
         }
 
@@ -41,6 +41,8 @@ namespace DominoGame.UI
                 Console.WriteLine("(Board Empty)");
                 return;
             }
+
+            Console.WriteLine("\nBoard :");
 
             var rendered = dominos.Select(RenderDomino).ToList();
 
@@ -79,6 +81,8 @@ namespace DominoGame.UI
                 Console.WriteLine("(Hand Empty)");
                 return;
             }
+
+            Console.WriteLine("Your hand :");
 
             StringBuilder sb = new StringBuilder();
 

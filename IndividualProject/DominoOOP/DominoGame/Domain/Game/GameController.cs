@@ -100,17 +100,18 @@ namespace DominoGame.Domain.Game
                 return;
 
             Player player = GetCurrentPlayer();
-
             OnTurnStarted(player, _board);
-
-            if (!CanPlay(player))
-            {
-                Console.WriteLine("No possible move. Passing turn...");
-                PassTurn(player);
-            }
 
             while (true)
             {
+                if (!CanPlay(player))
+                {
+                    Console.WriteLine($"\nNo possible move for {player.Name}. Passing turn...");
+                    _consecutivePasses++;
+                    PassTurn(player);
+                    break;
+                }
+
                 Console.WriteLine("\nChoose action:");
                 Console.WriteLine("1. Play Domino");
                 Console.WriteLine("2. Pass");
@@ -120,12 +121,15 @@ namespace DominoGame.Domain.Game
 
                 if (input == "2")
                 {
+                    OnActionExecuted(player, null, BoardSide.Left);
                     PassTurn(player);
+                    break;
                 }
 
                 if (input == "1")
                 {
                     PlayTurn(player);
+                    break;
                 }
 
                 Console.WriteLine("Invalid input.");
@@ -133,9 +137,11 @@ namespace DominoGame.Domain.Game
         }
         private void PlayTurn(Player player)
         {
-            while (true)
+            bool isPlaced = false;
+
+            while (!isPlaced)
             {
-                Console.Write("\nSelect domino index: ");
+                Console.Write("Select domino index: ");
                 if (!int.TryParse(Console.ReadLine(), out int index))
                 {
                     Console.WriteLine("Invalid number.");
@@ -148,7 +154,7 @@ namespace DominoGame.Domain.Game
                     continue;
                 }
 
-                Domino domino = player.Hand[index];
+                Domino selectedDomino = player.Hand[index];
 
                 Console.Write("Select side (L/R): ");
                 string? sideInput = Console.ReadLine();
@@ -164,34 +170,45 @@ namespace DominoGame.Domain.Game
                     continue;
                 }
 
-                OnActionExecuted(player, domino, side);
-                PlaceDomino(player, domino, side);
-            }
-        }
-        private void PlaceDomino(Player player, Domino domino, BoardSide side)
-        {
-            if (!_board.CanPlace(domino, side))
-            {
-                throw new InvalidOperationException($"\n{domino} cannot be placed on board from {side} side.");
-            }
+                // Placing Domino
+                if (!_board.CanPlace(selectedDomino, side))
+                {
+                    Console.WriteLine($"\n{selectedDomino} cannot be placed on board from {side} side.");
+                    continue;
+                }
 
-            if (side == BoardSide.Left)
-            {
-                _board.Dominoes.AddFirst(domino);
-            }
-            else
-            {
-                _board.Dominoes.AddLast(domino);
-            }
+                OnActionExecuted(player, selectedDomino, side);
+                PlacingDomino(player, selectedDomino, side);
 
-            player.Hand.Remove(domino);
-            _consecutivePasses = 0;
+                isPlaced = true;
+            }
 
             CheckRoundEnd();
         }
+        private void PlacingDomino(Player player, Domino selectedDomino, BoardSide side)
+        {
+            if (_board.IsEmpty)
+            {
+                _board.Dominoes.AddFirst(selectedDomino);
+            }
+            else if (side == BoardSide.Left)
+            {
+                Domino flippedDomino = selectedDomino.RightPip == _board.LeftEnd ? selectedDomino : new Domino(leftPip: selectedDomino.RightPip, rightPip: selectedDomino.LeftPip);
+
+                _board.Dominoes.AddFirst(flippedDomino);
+            }
+            else
+            {
+                Domino flippedDomino = selectedDomino.LeftPip == _board.RightEnd ? selectedDomino : new Domino(leftPip: selectedDomino.RightPip, rightPip: selectedDomino.LeftPip);
+
+                _board.Dominoes.AddLast(flippedDomino);
+            }
+
+            player.Hand.Remove(selectedDomino);
+            _consecutivePasses = 0;
+        }
         private void PassTurn(Player player)
         {
-            _consecutivePasses++;
             Console.WriteLine("Enter to continue.");
             Console.ReadKey();
 
@@ -200,6 +217,7 @@ namespace DominoGame.Domain.Game
         private void CheckRoundEnd()
         {
             Player? winner = _players.FirstOrDefault(p => p.Hand.Count == 0);
+
             if (winner != null)
             {
                 NormalScoring(winner);
@@ -231,10 +249,12 @@ namespace DominoGame.Domain.Game
             foreach (Player player in _players)
             {
                 if (player == winner)
-                    return;
+                    continue;
 
                 totalOpponentPip += CountPips(player.Hand);
             }
+
+            Console.WriteLine($"Total pips for the winner : {totalOpponentPip}");
 
             winner.Score += totalOpponentPip;
 
@@ -246,12 +266,12 @@ namespace DominoGame.Domain.Game
         }
         private void BlockedScoring()
         {
+            Console.WriteLine();
             Dictionary<Player, int> scores = new Dictionary<Player, int>();
             Dictionary<Player, int> pipCounts = new Dictionary<Player, int>();
 
             foreach (Player player in _players)
             {
-                Console.WriteLine($"{player.Name}'s remaining dominoes : ");
                 int pips = CountPips(player.Hand);
                 pipCounts[player] = pips;
                 scores[player] = 0;
@@ -285,8 +305,7 @@ namespace DominoGame.Domain.Game
 
             Console.WriteLine($"{winner.Name} have the least total pips");
             Console.WriteLine($"Score given to {winner.Name},\ntotal sum all pips minus the winner total pips :");
-            Console.WriteLine($"{totalOpponentPips} - {pipCounts[winner]} = {scores[winner]}");
-
+            Console.WriteLine($"{totalOpponentPips} - {pipCounts[winner]} = {totalOpponentPips - pipCounts[winner]}");
 
             OnRoundEnded(winner, true);
             CheckGameEnd();
@@ -355,7 +374,7 @@ namespace DominoGame.Domain.Game
                 new TurnStartedEventArgs(player, board)
             );
         }
-        protected virtual void OnActionExecuted(Player player, Domino domino, BoardSide side)
+        protected virtual void OnActionExecuted(Player player, Domino? domino, BoardSide side)
         {
             ActionExecuted?.Invoke(
                 this,
