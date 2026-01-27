@@ -1,5 +1,5 @@
 using DominoGame.Domain.Events;
-using DominoGame.Domain.Game;
+using DominoGame.Game;
 
 namespace DominoGame.UI
 {
@@ -16,13 +16,13 @@ namespace DominoGame.UI
 
         private void SubscribeEvents()
         {
-            _controller.TurnStarted += OnTurnStarted;
-            _controller.ActionExecuted += OnActionExecuted;
-            _controller.RoundEnded += OnRoundEnded;
-            _controller.GameEnded += OnGameEnded;
+            _controller.TurnStarted += TurnInformation;
+            _controller.ActionExecuted += PlayPassAction;
+            _controller.RoundEnded += RoundEndedNotification;
+            _controller.GameEnded += GameEndedNotification;
         }
 
-        private void OnTurnStarted(object? sender, TurnStartedEventArgs e)
+        private void TurnInformation(object? sender, TurnStartedEventArgs e)
         {
             Console.WriteLine("\n==============================");
             Console.WriteLine($"Turn: {e.Player.Name}");
@@ -33,20 +33,19 @@ namespace DominoGame.UI
             Console.WriteLine();
             RenderUtil.RenderHand(e.Player.Hand);
         }
-        private void OnActionExecuted(object? sender, ActionExecutedEventArgs e)
+        private void PlayPassAction(object? sender, ActionExecutedEventArgs e)
         {
             Console.Clear();
             if (e.Domino != null)
             {
-                Console.WriteLine($"{e.Player.Name} plays {e.Domino} on {e.Side}");
+                Console.WriteLine($"{e.Player.Name} placed {e.Domino} on {e.Side}");
             }
             else
             {
                 Console.WriteLine($"{e.Player.Name} passes");
             }
         }
-
-        private void OnRoundEnded(object? sender, RoundEndedEventArgs e)
+        private void RoundEndedNotification(object? sender, RoundEndedEventArgs e)
         {
             Console.WriteLine("\n=== ROUND ENDED ===");
 
@@ -66,8 +65,7 @@ namespace DominoGame.UI
             //     Console.WriteLine($"- {player.Name}: {player.Score}");
             // }
         }
-
-        private void OnGameEnded(object? sender, GameEndedEventArgs e)
+        private void GameEndedNotification(object? sender, GameEndedEventArgs e)
         {
             Console.WriteLine("\n==============================");
             Console.WriteLine($"GAME OVER");

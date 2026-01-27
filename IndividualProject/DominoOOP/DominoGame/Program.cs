@@ -1,7 +1,7 @@
 ﻿
 
 using DominoGame.Domain.Entities;
-using DominoGame.Domain.Game;
+using DominoGame.Game;
 using DominoGame.UI;
 
 namespace DominoGame
@@ -10,51 +10,62 @@ namespace DominoGame
     {
         public static void Main()
         {
-            Console.WriteLine("================================");
-            Console.WriteLine("|                              |");
-            Console.WriteLine("| Welcome to Block Domino Game |");
-            Console.WriteLine("|                              |");
-            Console.WriteLine("================================");
+            PrintBanner();
 
+            var players = CreatePlayers();
 
-            List<Player> players = new List<Player>
-            {
-                new Player(1, "Player 1"),
-                new Player(2, "Player 2")
-            };
+            var controller = new GameController(players);
 
+            // Renderer subscribe ke event di constructor
+            _ = new ConsoleRenderer(controller);
 
-            GameController controller = new GameController(players);
-
-            ConsoleRenderer renderer = new ConsoleRenderer(controller);
-
-            Console.WriteLine("Press any key to start the game...");
+            Console.WriteLine("\nPress any key to start the game...");
             Console.ReadKey();
 
+            RunGame(controller);
+
+            Console.WriteLine("\nGame finished.");
+            Console.WriteLine($"Winner: {controller.GameWinner?.Name}");
+            Console.ReadKey();
+        }
+
+        private static void RunGame(GameController controller)
+        {
             while (!controller.IsGameEnded)
             {
                 controller.StartRound();
 
                 while (!controller.IsRoundEnded)
                 {
-                    try
-                    {
-                        controller.PlayerAction();
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"{ex.Message}");
-                        Console.WriteLine("Please try again.\n");
-                    }
+                    controller.PlayerAction();
                 }
 
-                Console.WriteLine("\nPress any key to start next round...");
-                Console.ReadKey();
+                if (!controller.IsGameEnded)
+                {
+                    Console.WriteLine("\nPress any key to start next round...");
+                    Console.ReadKey();
+                }
             }
+        }
 
-            Console.WriteLine("\nGame finished.");
-            Console.WriteLine($"Winner: {controller.GameWinner?.Name}");
-            Console.ReadKey();
+        private static List<Player> CreatePlayers()
+        {
+            return new List<Player>
+        {
+            new Player(1, "Player 1"),
+            new Player(2, "Player 2")
+        };
+        }
+
+        private static void PrintBanner()
+        {
+            Console.Clear();
+            Console.WriteLine("================================");
+            Console.WriteLine("|                              |");
+            Console.WriteLine("| Welcome to Block Domino Game |");
+            Console.WriteLine("|                              |");
+            Console.WriteLine("================================");
         }
     }
+
 }

@@ -9,7 +9,7 @@ namespace DominoGame.Domain.Events
         public Domino? Domino { get; }
         public BoardSide? Side { get; }
 
-        public ActionExecutedEventArgs(Player player, Domino? domino, BoardSide side)
+        public ActionExecutedEventArgs(Player player, Domino? domino, BoardSide? side)
         {
             Player = player ?? throw new ArgumentNullException(nameof(player));
             Domino = domino;
