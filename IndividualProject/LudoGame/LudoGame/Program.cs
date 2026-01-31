@@ -1,5 +1,9 @@
-﻿using LudoGame.Enums;
+﻿using LudoGame.Controller;
+using LudoGame.Enums;
 using LudoGame.Models.Board;
+using LudoGame.Models.Dice;
+using LudoGame.Models.Piece;
+using LudoGame.Models.Player;
 using LudoGame.Utils;
 
 namespace LudoGame
@@ -8,52 +12,102 @@ namespace LudoGame
     {
         static void Main()
         {
-            Board standardBoard = BoardGenerator.GenerateStandard15x15();
+            // ===== INIT =====
+            Board board = StandardBoard.GenerateBoard();
+            Dice dice = new Dice(6);
 
-            PrintBoard(standardBoard);
-        }
-
-        static void PrintBoard(Board board)
-        {
-            Tile[,] tiles = board.Tiles;
-            int size = tiles.GetLength(0);
-
-            Console.WriteLine("=== LUDO BOARD 15x15 ===\n");
-
-            for (int row = 0; row < size; row++)
+            List<Player> players = new List<Player>
             {
-                for (int col = 0; col < size; col++)
+                new Player("Player Red", Color.Red),
+                new Player("Player Blue", Color.Blue),
+                new Player("Player Yellow", Color.Yellow),
+                new Player("Player Green", Color.Green),
+            };
+
+            GameController game = new GameController(board, dice, players);
+
+            game.OnCaptured += (player, piece) =>
+            {
+                Console.WriteLine($"💥 {player.Name} captured a {piece.Color} piece!");
+            };
+
+            game.OnGameEnded += winner =>
+            {
+                Console.WriteLine($"\n🏆 GAME OVER! Winner: {winner.Name}");
+            };
+
+            game.StartGame();
+
+            // ===== GAME LOOP =====
+            while (!game.IsGameOver())
+            {
+                Console.Clear();
+
+                Player currentPlayer = game.GetCurrentPlayer();
+                Console.WriteLine($"🎮 Turn: {currentPlayer.Name} ({currentPlayer.Color})");
+
+                Console.WriteLine("Press ENTER to roll dice...");
+                Console.ReadLine();
+
+                int diceValue = game.RollDice();
+                Console.WriteLine($"🎲 Dice rolled: {diceValue}\n");
+
+                List<Piece> moveablePieces = game.GetMoveablePieces(currentPlayer);
+                ConsoleRenderer.RenderBoard(board, game, moveablePieces.ToHashSet());
+
+                if (moveablePieces.Count == 0)
                 {
-                    Console.BackgroundColor = ChangeConsoleColor(tiles[row, col]);
-                    Console.Write(GetTileChar(tiles[row, col]) + " ");
+                    Console.WriteLine("❌ No moveable pieces.");
+                    Console.WriteLine("Press ENTER to continue...");
+                    Console.ReadLine();
+                    game.NextTurn();
+                    continue;
                 }
-                Console.WriteLine();
+
+                Console.WriteLine("\nChoose piece to move:");
+                for (int i = 0; i < moveablePieces.Count; i++)
+                {
+                    Piece piece = moveablePieces[i];
+                    Console.WriteLine($"{i + 1}. Piece at {piece.CurrentTile?.Position}");
+                }
+
+                int choice = ReadChoice(1, moveablePieces.Count);
+                Piece selectedPiece = moveablePieces[choice - 1];
+
+                game.MovePiece(currentPlayer, selectedPiece);
+
+                Console.WriteLine($"➡️ Moved piece to {selectedPiece.CurrentTile?.Position}");
+
+                if (game.IsTurnFinished())
+                {
+                    Console.WriteLine("\nTurn finished. Press ENTER...");
+                    Console.ReadLine();
+                    game.NextTurn();
+                }
+                else
+                {
+                    Console.WriteLine("\n🎲 You get another turn!");
+                    Console.ReadLine();
+                }
             }
+
+            Console.WriteLine("\nPress ENTER to exit...");
+            Console.ReadLine();
         }
 
-        static ConsoleColor ChangeConsoleColor(Tile tile)
+        private static int ReadChoice(int min, int max)
         {
-            return tile.Color switch
+            while (true)
             {
-                Color.Red => ConsoleColor.Red,
-                Color.Blue => ConsoleColor.Blue,
-                Color.Green => ConsoleColor.Green,
-                Color.Yellow => ConsoleColor.Yellow,
-                _ => ConsoleColor.Black
-            };
-        }
-        static char GetTileChar(Tile tile)
-        {
-            return tile.Zone switch
-            {
-                Zone.None => '.',
-                Zone.Main => tile.IsSafe ? '*' : '#',
-                Zone.Start => 'S',
-                Zone.Finish => 'F',
-                Zone.Goal => 'G',
-                Zone.Home => 'H',
-                _ => '?'
-            };
+                Console.Write("Input number: ");
+                if (int.TryParse(Console.ReadLine(), out int value) &&
+                    value >= min && value <= max)
+                {
+                    return value;
+                }
+
+                Console.WriteLine("❌ Invalid input.");
+            }
         }
     }
 }
