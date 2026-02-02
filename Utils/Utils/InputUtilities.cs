@@ -2,10 +2,6 @@
 
 public static class InputUtilities
 {
-    private static int _usedCount = 0;
-    public static int UsedCount => _usedCount;
-    public static bool IsInitialized { get; private set; } = true;
-
     public static int ReadInteger(string prompt = "Please enter a number : ", int? min = null, int? max = null)
     {
         int value;
@@ -36,7 +32,7 @@ public static class InputUtilities
                     else if (max.HasValue)
                     {
 
-                        Console.WriteLine($"Invalid input. Please enter a number between less  thanor equal to {max.Value}.");
+                        Console.WriteLine($"Invalid input. Please enter a number between less than or equal to {max.Value}.");
                     }
                 }
             }

@@ -82,6 +82,11 @@ namespace LudoGame.Controller
             _stepsMoved[piece] = targetIndex;
             piece.CurrentTile = targetTile;
 
+            if (targetTile.Zone == Zone.Goal)
+            {
+                _currentDiceValue = _dice.Sides;
+            }
+
             CheckGameEndInternal();
         }
         public bool IsTurnFinished()
@@ -193,6 +198,8 @@ namespace LudoGame.Controller
 
             _stepsMoved[piece] = -1;
             piece.CurrentTile = homeTile;
+            
+            _currentDiceValue = _dice.Sides;
         }
         private void CheckGameEndInternal()
         {
