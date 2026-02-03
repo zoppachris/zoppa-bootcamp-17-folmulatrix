@@ -1,0 +1,237 @@
+@page "/game"
+@inject NavigationManager Nav
+@inject GameSessionService Session
+
+@using Ludo.Blazor.Components.View
+@using Ludo.Game.Controller
+@using Ludo.Game.Enums
+@using Ludo.Game.Models.Board
+@using Ludo.Game.Models.Piece
+@using Ludo.Game.Models.Player
+
+@if (Session.Game == null)
+{
+    <div class="home">
+        <div class="home-card">
+            <p>Game not initialized.</p>
+            <button class="play-button" @onclick="BackToHome">
+                Return To Home
+            </button>
+        </div>
+    </div>
+}
+else
+{
+    <div class="game">
+
+        <div class="game-card">
+
+            <div class="game-header">
+                <div class="turn">
+                    <span class="label">Turn</span>
+                    <span class="player @CurrentPlayer.Color.ToString().ToLower()">
+                        @CurrentPlayer.Name
+                    </span>
+                </div>
+
+                <div class="dice">
+                    <button class="dice-btn" disabled="@(!CanRollDice)" @onclick="RollDice">
+                        🎲
+                    </button>
+                    @if (DiceValue > 0)
+                    {
+                        <span class="dice-value">@DiceValue</span>
+                    }
+                </div>
+            </div>
+
+            <BoardView Board="Board" PiecesOnTiles="PiecesOnTiles" ClickablePieces="clickablePieces"
+                PreviewTile="previewTile" OnPieceHover="OnPieceHover" OnPieceHoverOut="OnPieceHoverOut"
+                OnPieceClicked="OnPieceClicked" />
+
+            <div class="game-log">
+                <div class="log-header">
+                    <span>Game Log</span>
+                    <span class="log-count">@gameLogs.Count</span>
+                </div>
+
+                <div class="log-list">
+                    @foreach (var log in gameLogs.TakeLast(3))
+                    {
+                        <div class="log-item @log.Type.ToString().ToLower()">
+                            <span class="time">@log.Time.ToString("HH:mm:ss")</span>
+                            <span class="text">@log.Message</span>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            @if (showWinnerModal)
+            {
+                <div class="modal-backdrop">
+                    <div class="modal">
+                        <h2>🏆 Winner</h2>
+                        <p>@winner!.Name wins the game!</p>
+                        <button class="btn-primary" @onclick="ResetGame">
+                            Play Again
+                        </button>
+                    </div>
+                </div>
+            }
+
+        </div>
+    </div>
+}
+
+
+
+@code {
+    GameController CurrentGame => Session.Game!;
+    Board Board => CurrentGame.Board!;
+    Player CurrentPlayer => CurrentGame.GetCurrentPlayer();
+    int DiceValue => CurrentGame.CurrentDiceValue;
+
+    Dictionary<Tile, List<Piece>> PiecesOnTiles =>
+    CurrentGame.PlayersPieces
+    .SelectMany(p => p.Value)
+    .Where(p => p.CurrentTile != null)
+    .GroupBy(p => p.CurrentTile!)
+    .ToDictionary(g => g.Key, g => g.ToList());
+
+    Tile? previewTile;
+    HashSet<Piece> clickablePieces = new();
+
+    bool CanRollDice = true;
+    bool showWinnerModal;
+    Player? winner;
+    List<GameLog> gameLogs = new();
+
+
+    protected override void OnInitialized()
+    {
+        if (Session.Game == null)
+            return;
+
+        Log($"Turn → {CurrentPlayer.Name}", GameLogType.Turn);
+
+        CurrentGame.OnCaptured += (attacker, victim) =>
+        {
+            Log($"{attacker.Name} captured a piece", GameLogType.Kill);
+
+            StateHasChanged();
+        };
+
+        CurrentGame.OnGameEnded += OnGameEnded;
+    }
+
+    void RollDice()
+    {
+        CanRollDice = false;
+
+        int value = CurrentGame.RollDice();
+        Log($"{CurrentPlayer.Name} rolled {value}", GameLogType.Dice);
+
+        clickablePieces = CurrentGame
+        .GetMoveablePieces(CurrentPlayer)
+        .ToHashSet();
+
+        if (clickablePieces.Count == 0)
+        {
+            Log($"{CurrentPlayer.Name} has no valid move", GameLogType.Info);
+            EndTurn();
+        }
+        else
+        {
+            Log($"{clickablePieces.Count} piece(s) can be moved", GameLogType.Info);
+        }
+    }
+
+    void EndTurn()
+    {
+        previewTile = null;
+        clickablePieces.Clear();
+        CanRollDice = true;
+
+        CurrentGame.NextTurn();
+
+        Log($"Turn → {CurrentPlayer.Name}", GameLogType.Turn);
+    }
+
+
+    void OnPieceHover(Piece piece)
+    {
+        if (!clickablePieces.Contains(piece)) return;
+
+        previewTile = GetDestinationTile(piece);
+    }
+
+    void OnPieceHoverOut()
+    {
+        previewTile = null;
+    }
+
+    void OnPieceClicked(Piece piece)
+    {
+        if (!clickablePieces.Contains(piece))
+            return;
+
+        CurrentGame.MovePiece(CurrentPlayer, piece);
+
+        clickablePieces.Clear();
+
+        if (piece.CurrentTile?.Zone == Zone.Goal)
+            Log($"{CurrentPlayer.Name} reached goal!", GameLogType.Goal);
+
+        if (!CurrentGame.IsTurnFinished())
+        {
+            Log($"{CurrentPlayer.Name} plays again 🎲", GameLogType.Info);
+            CanRollDice = true;
+        }
+        else
+        {
+            EndTurn();
+        }
+    }
+
+    Tile? GetDestinationTile(Piece piece)
+    {
+        var path = Board.ColorPaths[piece.Color];
+
+        if (piece.CurrentTile == null || piece.CurrentTile.Zone == Zone.Home)
+            return DiceValue == 6 ? path[0] : null;
+
+        int index = path.IndexOf(piece.CurrentTile);
+        int target = index + DiceValue;
+
+        return target < path.Count ? path[target] : null;
+    }
+
+    void OnGameEnded(Player player)
+    {
+        winner = player;
+        showWinnerModal = true;
+    }
+
+
+    void ResetGame()
+    {
+        showWinnerModal = false;
+        Session.Reset();
+        Nav.NavigateTo("/setup", true);
+    }
+
+    void Log(string message, GameLogType type = GameLogType.Info)
+    {
+        gameLogs.Add(new GameLog(message, type, DateTime.Now));
+
+        if (gameLogs.Count > 30)
+            gameLogs.RemoveAt(0);
+    }
+
+
+
+    void BackToHome()
+    {
+        Nav.NavigateTo("/");
+    }
+}

@@ -1,0 +1,89 @@
+@page "/players"
+@using Ludo.Game.Enums
+@using Ludo.Game.Models.Player
+@inject NavigationManager Nav
+@inject GameSessionService Session
+
+<h3 hidden></h3>
+
+<div class="players">
+    <div class="players-card">
+        <h2>Players Setup</h2>
+        <p class="subtitle">Enter name and choose color</p>
+
+        <div class="players-list">
+            @foreach (var player in PlayerForms)
+            {
+                <div class="player-slot">
+                    <input type="text" placeholder="Player name" @bind="player.Name" class="player-name" />
+
+                    <div class="colors">
+                        @foreach (var color in AvailableColors)
+                        {
+                            <button class="color-btn @color.ToString().ToLower()
+                                                                   @(player.Color == color ? " selected" : "")
+                                                                   @(IsColorTaken(color, player) ? " disabled" : "")"
+                                disabled="@IsColorTaken(color, player)" @onclick="() => player.Color = color">
+                            </button>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <button class="start-button" disabled="@(!CanStart)" @onclick="StartGame">
+            Start Game
+        </button>
+    </div>
+</div>
+
+
+@code {
+    class PlayerForm
+    {
+        public string Name { get; set; } = "";
+        public Color? Color { get; set; }
+    }
+
+    [SupplyParameterFromQuery] public int Count { get; set; }
+
+    List<PlayerForm> PlayerForms = new();
+
+    Color[] AvailableColors = new[]
+    {
+Color.Red,
+Color.Blue,
+Color.Green,
+Color.Yellow
+};
+
+    protected override void OnInitialized()
+    {
+        for (int i = 0; i < Count; i++)
+        {
+            PlayerForms.Add(new PlayerForm());
+        }
+    }
+
+    bool IsColorTaken(Color color, PlayerForm anotherPlayer)
+    {
+        return PlayerForms
+        .Where(p => p != anotherPlayer)
+        .Any(p => p.Color == color);
+    }
+
+    bool CanStart =>
+    PlayerForms.All(p =>
+    !string.IsNullOrWhiteSpace(p.Name) &&
+    p.Color != null);
+
+    void StartGame()
+    {
+        var players = PlayerForms
+        .Select(p => new Player(p.Name!, p.Color!.Value))
+        .ToList();
+
+        Session.CreateGame(players);
+        Nav.NavigateTo("/game");
+    }
+}

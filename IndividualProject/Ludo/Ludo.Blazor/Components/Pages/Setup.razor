@@ -1,0 +1,31 @@
+@page "/setup"
+@inject NavigationManager Nav
+
+<div class="setup">
+    <div class="setup-card">
+        <h2>Game Setup</h2>
+        <p class="subtitle">Choose number of players</p>
+
+        <div class="player-count">
+            @foreach (var count in new[] { 2, 3, 4 })
+            {
+                <button class="count-btn @(PlayerCount == count ? "selected" : "")" @onclick="() => PlayerCount = count">
+                    @count
+                </button>
+            }
+        </div>
+
+        <button class="next-button" @onclick="Next">
+            Next →
+        </button>
+    </div>
+</div>
+
+@code {
+    int PlayerCount { get; set; } = 2;
+
+    void Next()
+    {
+        Nav.NavigateTo($"/players?count={PlayerCount}");
+    }
+}

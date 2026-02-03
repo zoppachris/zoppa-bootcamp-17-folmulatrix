@@ -1,0 +1,23 @@
+@page "/"
+@inject NavigationManager Nav
+
+<div class="home">
+    <div class="home-card">
+        <h2>Welcome to Ludo</h2>
+        <p>
+            Classic board game.<br />
+            Play with 2–4 players.
+        </p>
+
+        <button class="play-button" @onclick="Play">
+            ▶ Play Game
+        </button>
+    </div>
+</div>
+
+@code {
+    void Play()
+    {
+        Nav.NavigateTo("/setup");
+    }
+}

@@ -1,0 +1,79 @@
+@using Ludo.Game.Enums
+@using Ludo.Game.Models.Board
+@using Ludo.Game.Models.Piece
+@inject GameSessionService Session
+
+<div class="board-wrapper">
+    <div class="board">
+        @for (int y = Board.Tiles.GetLength(1) - 1; y >= 0; y--)
+        {
+            @for (int x = 0; x < Board.Tiles.GetLength(0); x++)
+            {
+                var tile = Board.Tiles[x, y];
+                var isPreview = PreviewTile == tile;
+
+                <div class="tile @GetTileClass(tile) @(isPreview ? "tile-preview" : "")">
+                    @if (tile.IsSafe && tile.Zone == Zone.Main)
+                    {
+                        <span class="safe-star">★</span>
+                    }
+                    @if (tile.Zone == Zone.Goal)
+                    {
+                        <span class="">🏁</span>
+                    }
+
+                    <div class="pieces">
+                        @if (PiecesOnTiles.TryGetValue(tile, out var pieces))
+                        {
+                            @foreach (var piece in pieces)
+                            {
+                                bool clickable = ClickablePieces.Contains(piece);
+
+                                if (clickable)
+                                {
+                                    <div class="piece clickable @piece.Color.ToString().ToLower()"
+                                        @onmouseenter="() => OnPieceHover.InvokeAsync(piece)"
+                                        @onmouseleave="() => OnPieceHoverOut.InvokeAsync()"
+                                        @onclick="() => OnPieceClicked.InvokeAsync(piece)">
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="piece disabled @piece.Color.ToString().ToLower()"></div>
+                                }
+                            }
+                        }
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public Board Board { get; set; } = default!;
+    [Parameter] public Dictionary<Tile, List<Piece>> PiecesOnTiles { get; set; } = new();
+    [Parameter] public Tile? PreviewTile { get; set; }
+    [Parameter] public HashSet<Piece> ClickablePieces { get; set; } = new();
+    [Parameter] public EventCallback<Piece> OnPieceClicked { get; set; }
+    [Parameter] public EventCallback<Piece> OnPieceHover { get; set; }
+    [Parameter] public EventCallback OnPieceHoverOut { get; set; }
+
+    string GetTileClass(Tile tile)
+    {
+        if (tile.Zone == Zone.None)
+            return "tile-wall";
+
+        if (tile.Zone == Zone.Main)
+            return tile.IsSafe ? "tile-main tile-safe" : "tile-main";
+
+        return tile.Color switch
+        {
+            Color.Red => "tile-home red",
+            Color.Blue => "tile-home blue",
+            Color.Green => "tile-home green",
+            Color.Yellow => "tile-home yellow",
+            _ => "tile-main"
+        };
+    }
+}
