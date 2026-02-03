@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using LudoGame.Enums;
 using LudoGame.Models.Board;
 using LudoGame.Models.Dice;
@@ -116,24 +115,6 @@ namespace LudoGame.Controller
             }
 
             return null;
-        }
-        public void DisplayPlayerPiece()
-        {
-            Player player = GetCurrentPlayer();
-            List<Piece> pieces = GetPieces(player);
-
-            Console.WriteLine($"{player.Name} pieces information :");
-            for (int i = 1; i < pieces.Count; i++)
-            {
-                Console.WriteLine($"Piece {i} position {pieces[i].CurrentTile?.Position}");
-            }
-        }
-        public void DisplayPieces(List<Piece> pieces)
-        {
-            for (int i = 0; i < pieces.Count; i++)
-            {
-                Console.WriteLine($"Piece {i + 1} position {pieces[i].CurrentTile?.Position}");
-            }
         }
         private void InitializePlayers()
         {

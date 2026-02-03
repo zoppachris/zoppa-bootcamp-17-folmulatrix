@@ -16,13 +16,20 @@ namespace LudoGame
             Board board = StandardBoard.GenerateBoard();
             Dice dice = new Dice(6);
 
-            List<Player> players = new List<Player>
+            Console.WriteLine("Welcome to Ludo Game!!!");
+
+            Console.WriteLine();
+
+            List<Player> players = PlayerChoose();
+
+            Console.WriteLine("\nList of player :");
+            foreach (var player in players)
             {
-                new Player("Player Red", Color.Red),
-                new Player("Player Blue", Color.Blue),
-                new Player("Player Yellow", Color.Yellow),
-                new Player("Player Green", Color.Green),
-            };
+                Console.WriteLine($"- {player.Name} - {player.Color}");
+            }
+
+            Console.WriteLine("\nEnter any key to start the game...");
+            Console.ReadKey();
 
             GameController game = new GameController(board, dice, players);
 
@@ -95,6 +102,36 @@ namespace LudoGame
             Console.ReadLine();
         }
 
+        private static List<Player> PlayerChoose()
+        {
+            Console.WriteLine("Choose how many player will play?");
+            Console.WriteLine("1. 2 Players");
+            Console.WriteLine("2. 3 Players");
+            Console.WriteLine("3. 4 Players");
+
+            int choice = ReadChoice(1, 3);
+            List<Color> colors = new() { Color.Blue, Color.Green, Color.Red, Color.Yellow };
+            List<Player> players = new();
+
+            for (int i = 1; i <= choice + 1; i++)
+            {
+                Console.WriteLine($"\nPlayer {i} you can pick your name.");
+                string playerName = InputString("Input your name : ");
+                Console.WriteLine("\nChoose your color :");
+                for (int n = 0; n < colors.Count; n++)
+                {
+                    Console.WriteLine($"{n + 1}. {colors[n]}");
+                }
+                int choiseColor = ReadChoice(1, colors.Count);
+                Color choicedColor = colors[choiseColor - 1];
+
+                players.Add(new Player(playerName, choicedColor));
+                colors.Remove(choicedColor);
+            }
+
+            return players;
+        }
+
         private static int ReadChoice(int min, int max)
         {
             while (true)
@@ -107,6 +144,21 @@ namespace LudoGame
                 }
 
                 Console.WriteLine("❌ Invalid input.");
+            }
+        }
+
+        private static string InputString(string inputMessage = "Input : ")
+        {
+            while (true)
+            {
+                Console.Write(inputMessage);
+                string? input = Console.ReadLine();
+                if (!string.IsNullOrEmpty(input))
+                {
+                    return input;
+                }
+
+                Console.WriteLine("❌ Input cannot be empty.");
             }
         }
     }
