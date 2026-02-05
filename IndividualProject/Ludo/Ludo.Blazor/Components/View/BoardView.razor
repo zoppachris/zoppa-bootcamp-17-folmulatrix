@@ -4,7 +4,8 @@
 @inject GameSessionService Session
 
 <div class="board-wrapper">
-    <div class="board">
+    <div class="board" style="grid-template-columns: repeat(@Board.Tiles.GetLength(0), 40px);
+  grid-template-rows: repeat(@Board.Tiles.GetLength(1), 40px);">
         @for (int y = Board.Tiles.GetLength(1) - 1; y >= 0; y--)
         {
             @for (int x = 0; x < Board.Tiles.GetLength(0); x++)

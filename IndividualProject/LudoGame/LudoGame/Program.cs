@@ -75,7 +75,7 @@ namespace LudoGame
                 for (int i = 0; i < moveablePieces.Count; i++)
                 {
                     Piece piece = moveablePieces[i];
-                    Console.WriteLine($"{i + 1}. Piece at {piece.CurrentTile?.Position}");
+                    Console.WriteLine($"{i + 1}. Piece at {game.GetPieceTile(piece)?.Position}");
                 }
 
                 int choice = ReadChoice(1, moveablePieces.Count);
@@ -83,7 +83,7 @@ namespace LudoGame
 
                 game.MovePiece(currentPlayer, selectedPiece);
 
-                Console.WriteLine($"➡️ Moved piece to {selectedPiece.CurrentTile?.Position}");
+                Console.WriteLine($"➡️ Moved piece to {game.GetPieceTile(selectedPiece)?.Position}");
 
                 if (game.IsTurnFinished())
                 {

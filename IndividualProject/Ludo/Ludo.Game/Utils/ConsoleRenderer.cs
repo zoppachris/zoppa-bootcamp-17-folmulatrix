@@ -17,13 +17,14 @@ namespace Ludo.Game.Utils
             {
                 foreach (Piece piece in game.GetPieces(player))
                 {
-                    if (piece.CurrentTile == null)
+                    Tile? tile = game.GetPieceTile(piece);
+                    if (tile == null)
                         continue;
 
-                    if (!tileToPieces.TryGetValue(piece.CurrentTile, out List<Piece>? list))
+                    if (!tileToPieces.TryGetValue(tile, out List<Piece>? list))
                     {
                         list = new List<Piece>();
-                        tileToPieces[piece.CurrentTile] = list;
+                        tileToPieces[tile] = list;
                     }
 
                     list.Add(piece);

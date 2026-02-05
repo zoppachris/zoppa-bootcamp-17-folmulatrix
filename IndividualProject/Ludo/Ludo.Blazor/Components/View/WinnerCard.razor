@@ -1,0 +1,21 @@
+@using Ludo.Game.Models.Player
+@if (Visible)
+{
+    <div class="winner-card">
+        <h2>🏆 Winner</h2>
+
+        <div class="winner-name @Winner!.Color.ToString().ToLower()">
+            @Winner.Name
+        </div>
+
+        <button class="start-button" @onclick="OnRestart">
+            Play Again
+        </button>
+    </div>
+}
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public Player? Winner { get; set; }
+    [Parameter] public EventCallback OnRestart { get; set; }
+}

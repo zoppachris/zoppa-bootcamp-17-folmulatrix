@@ -10,8 +10,6 @@ public class GameViewState
     public int DisplayDiceValue { get; private set; }
 
     public bool IsAnimating { get; set; }
-
-
     private readonly Dictionary<Piece, Tile?> _animatingPieces = new();
 
     public void StartRolling()
@@ -32,21 +30,15 @@ public class GameViewState
         CanRollDice = true;
         DisplayDiceValue = 0;
     }
-
-    public async Task FakeRolling(int sides)
+    public void DisableDice()
     {
-        var random = new Random();
-
-        for (int i = 0; i < 10; i++)
-        {
-            DisplayDiceValue = random.Next(1, sides + 1);
-            await Task.Delay(80);
-        }
+        CanRollDice = false;
+        IsRolling = false;
     }
-
-    /* =========================
-     * Piece Animation
-     * ========================= */
+    public void SetDisplayDice(int value)
+    {
+        DisplayDiceValue = value;
+    }
     public void AnimatePiece(Piece piece, Tile tile)
     {
         _animatingPieces[piece] = tile;
@@ -57,18 +49,17 @@ public class GameViewState
         _animatingPieces.Remove(piece);
     }
 
-    /* =========================
-     * Board Projection
-     * ========================= */
     public Dictionary<Tile, List<Piece>> PiecesOnTiles(GameController game)
     {
-        return game.PlayersPieces
-            .SelectMany(kvp => kvp.Value)
-            .Select(piece =>
+        return game.PiecePositions
+            .Select(kvp =>
             {
-                var tile = _animatingPieces.TryGetValue(piece, out var animatedTile)
-                    ? animatedTile
-                    : piece.CurrentTile;
+                var piece = kvp.Key;
+
+                var tile =
+                    _animatingPieces.TryGetValue(piece, out var animatedTile)
+                        ? animatedTile
+                        : kvp.Value;
 
                 return (piece, tile);
             })
@@ -80,25 +71,26 @@ public class GameViewState
             );
     }
 
-    /* =========================
-     * Movement Helpers (UI only)
-     * ========================= */
-    public List<Tile> GetMovePath(Board board, Piece piece, int diceSides)
+    public List<Tile> GetMovePath(
+        GameController game,
+        Board board,
+        Piece piece)
     {
         if (DisplayDiceValue <= 0)
             return new();
 
+        var currentTile = game.GetPieceTile(piece);
         var path = board.ColorPaths[piece.Color];
 
-        // keluar dari home
-        if (piece.CurrentTile == null || piece.CurrentTile.Zone == Zone.Home)
+        // keluar dari home (visual only)
+        if (currentTile == null || currentTile.Zone == Zone.Home)
         {
-            return DisplayDiceValue == diceSides
+            return DisplayDiceValue == game.Dice.Sides
                 ? new List<Tile> { path[0] }
                 : new();
         }
 
-        int start = path.IndexOf(piece.CurrentTile);
+        int start = path.IndexOf(currentTile);
         int end = start + DisplayDiceValue;
 
         if (end >= path.Count)
@@ -110,17 +102,23 @@ public class GameViewState
             .ToList();
     }
 
-    public Tile? GetDestinationTile(Board board, Piece piece)
+    public Tile? GetDestinationTile(
+        GameController game,
+        Board board,
+        Piece piece)
     {
         if (DisplayDiceValue <= 0)
             return null;
 
+        var currentTile = game.GetPieceTile(piece);
         var path = board.ColorPaths[piece.Color];
 
-        if (piece.CurrentTile == null || piece.CurrentTile.Zone == Zone.Home)
-            return DisplayDiceValue == 6 ? path[0] : null;
+        if (currentTile == null || currentTile.Zone == Zone.Home)
+            return DisplayDiceValue == game.Dice.Sides
+                ? path[0]
+                : null;
 
-        int index = path.IndexOf(piece.CurrentTile);
+        int index = path.IndexOf(currentTile);
         int target = index + DisplayDiceValue;
 
         return target < path.Count ? path[target] : null;

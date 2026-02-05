@@ -24,6 +24,9 @@ else
 {
     <div class="game">
         <div class="game-card">
+
+            <WinnerCard Visible="showWinnerCard" Winner="winner" OnRestart="ResetGame" />
+
             <div class="game-main">
                 <div class="player-panel">
                     <PlayerTurnPanel Player="CurrentPlayer" />
@@ -31,13 +34,14 @@ else
                 </div>
 
                 <BoardView Board="CurrentGame.Board" PiecesOnTiles="View.PiecesOnTiles(CurrentGame)"
-                    ClickablePieces="clickablePieces" PreviewTile="previewTile" KilledPiece="killedPiece"
-                    OnPieceClicked="OnPieceClicked" OnPieceHover="OnPieceHover" OnPieceHoverOut="ClearPreview" />
+                           ClickablePieces="clickablePieces" PreviewTile="previewTile" KilledPiece="killedPiece"
+                           OnPieceClicked="OnPieceClicked" OnPieceHover="OnPieceHover" OnPieceHoverOut="ClearPreview" />
             </div>
 
             <GameLogPanel Logs="gameLogs" LastLog="lastLog" />
-
-            <WinnerModal Visible="showWinnerModal" Winner="winner" OnRestart="ResetGame" />
+            @* <button class="play-button" @onclick="() => OnGameEnded(CurrentPlayer)">
+                Return To Home
+            </button> *@
         </div>
     </div>
 }
@@ -53,7 +57,7 @@ else
     Tile? previewTile;
     Piece? killedPiece;
 
-    bool showWinnerModal;
+    bool showWinnerCard;
     Player? winner;
 
     List<GameLog> gameLogs = new();
@@ -61,6 +65,9 @@ else
 
     protected override void OnInitialized()
     {
+        if (Session.Game == null)
+            return;
+
         Log($"Turn → {CurrentPlayer.Name}", GameLogType.Turn, CurrentPlayer);
 
         CurrentGame.OnCaptured += async (attacker, victim) =>
@@ -79,10 +86,25 @@ else
 
     async Task RollDiceAnimated()
     {
-        View.StartRolling();
+        if (View.IsRolling)
+            return;
 
-        await View.FakeRolling(CurrentGame.Dice.Sides);
-        View.StopRolling(CurrentGame.RollDice());
+        View.StartRolling();
+        StateHasChanged();
+
+        var random = new Random();
+
+        // visual fake roll
+        for (int i = 0; i < 10; i++)
+        {
+            View.SetDisplayDice(random.Next(1, CurrentGame.Dice.Sides + 1));
+            StateHasChanged();
+            await Task.Delay(80);
+        }
+
+        // real roll
+        int value = CurrentGame.RollDice();
+        View.StopRolling(value);
 
         Log($"{CurrentPlayer.Name} rolled {View.DisplayDiceValue}", GameLogType.Dice, CurrentPlayer);
 
@@ -103,7 +125,7 @@ else
         clickablePieces.Clear();
         View.IsAnimating = true;
 
-        foreach (var tile in View.GetMovePath(Board, piece, CurrentGame.Dice.Sides))
+        foreach (var tile in View.GetMovePath(CurrentGame, Board, piece))
         {
             View.AnimatePiece(piece, tile);
             await Task.Delay(250);
@@ -121,7 +143,7 @@ else
 
     void AfterMove(Piece piece)
     {
-        if (piece.CurrentTile?.Zone == Zone.Goal)
+        if (CurrentGame.GetPieceTile(piece)?.Zone == Zone.Goal)
             Log($"{CurrentPlayer.Name} reached goal ⭐", GameLogType.Action, CurrentPlayer);
 
         if (!CurrentGame.IsTurnFinished())
@@ -148,7 +170,7 @@ else
     void OnPieceHover(Piece piece)
     {
         if (!clickablePieces.Contains(piece)) return;
-        previewTile = View.GetDestinationTile(Board, piece);
+        previewTile = View.GetDestinationTile(CurrentGame, Board, piece);
     }
 
     void ClearPreview() => previewTile = null;
@@ -156,12 +178,14 @@ else
     void OnGameEnded(Player player)
     {
         winner = player;
-        showWinnerModal = true;
+        showWinnerCard = true;
+        View.DisableDice();
+
+        StateHasChanged();
     }
 
     void ResetGame()
     {
-        showWinnerModal = false;
         Session.Reset();
         Nav.NavigateTo("/setup", true);
     }

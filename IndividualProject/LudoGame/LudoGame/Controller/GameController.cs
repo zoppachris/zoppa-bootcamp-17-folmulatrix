@@ -14,9 +14,14 @@ namespace LudoGame.Controller
         private readonly Random _random;
         private readonly Dictionary<Player, List<Piece>> _pieceInHands;
         private readonly Dictionary<Piece, int> _stepsMoved;
+        private readonly Dictionary<Piece, Tile?> _piecePositions = new();
         private int _currentDiceValue;
         private int _currentPlayerIndex;
+        private bool _hasBonusTurn;
+        public Dice Dice => _dice;
         public List<Player> Players => _players;
+        public Board Board => _board;
+        public Dictionary<Piece, Tile?> PiecePositions => _piecePositions;
         public Action<Player, Piece>? OnCaptured;
         public Action<Player>? OnGameEnded;
 
@@ -37,14 +42,20 @@ namespace LudoGame.Controller
         {
             return _players[_currentPlayerIndex];
         }
+        public Tile? GetPieceTile(Piece piece)
+        {
+            return _piecePositions.TryGetValue(piece, out Tile? tile) ? tile : null;
+        }
         public void StartGame()
         {
             _currentPlayerIndex = 0;
             _currentDiceValue = 0;
+            _hasBonusTurn = false;
         }
         public int RollDice()
         {
             _currentDiceValue = _random.Next(1, _dice.Sides + 1);
+            _hasBonusTurn = _currentDiceValue == _dice.Sides;
             return _currentDiceValue;
         }
         public List<Piece> GetPieces(Player player)
@@ -63,34 +74,37 @@ namespace LudoGame.Controller
                 throw new InvalidOperationException("Piece cannot be moved.");
 
             List<Tile> path = _board.ColorPaths[piece.Color];
+            Tile? currentTile = _piecePositions[piece];
+            Tile targetTile;
 
-            // Piece dari Home
-            if (_stepsMoved[piece] == -1)
+            if (currentTile == null || currentTile.Zone == Zone.Home)
             {
+                // Piece dari Home
+                targetTile = path[0];
                 _stepsMoved[piece] = 0;
-                piece.CurrentTile = path[0];
-                return;
             }
-
-            // Piece di Main path
-            int targetIndex = _stepsMoved[piece] + _currentDiceValue;
-            Tile targetTile = path[targetIndex];
+            else
+            {
+                // Piece di Main
+                int targetIndex = path.IndexOf(currentTile);
+                targetTile = path[targetIndex + _currentDiceValue];
+                _stepsMoved[piece] = targetIndex;
+            }
 
             HandleCaptureIfAny(player, piece, targetTile);
 
-            _stepsMoved[piece] = targetIndex;
-            piece.CurrentTile = targetTile;
+            _piecePositions[piece] = targetTile;
 
             if (targetTile.Zone == Zone.Goal)
             {
-                _currentDiceValue = _dice.Sides;
+                _hasBonusTurn = true;
             }
 
             CheckGameEndInternal();
         }
         public bool IsTurnFinished()
         {
-            return _currentDiceValue != _dice.Sides;
+            return !_hasBonusTurn;
         }
         public void NextTurn()
         {
@@ -134,7 +148,8 @@ namespace LudoGame.Controller
 
                 for (int i = 0; i < 4; i++)
                 {
-                    Piece piece = new Piece(player.Color, homeTiles[i]);
+                    Piece piece = new Piece(player.Color);
+                    _piecePositions[piece] = homeTiles[i];
                     _pieceInHands[player].Add(piece);
                     _stepsMoved[piece] = -1;
                 }
@@ -159,16 +174,16 @@ namespace LudoGame.Controller
             if (targetTile.IsSafe)
                 return;
 
-            foreach (Piece enemy in _stepsMoved.Keys)
+            foreach (Piece piece in _stepsMoved.Keys)
             {
-                if (enemy.Color == movingPiece.Color)
+                if (piece.Color == movingPiece.Color)
                     continue;
 
-                if (enemy.CurrentTile != targetTile)
+                if (_piecePositions[piece] != targetTile)
                     continue;
 
-                KillPiece(enemy);
-                OnCaptured?.Invoke(attacker, enemy);
+                KillPiece(piece);
+                OnCaptured?.Invoke(attacker, piece);
             }
         }
         private void KillPiece(Piece piece)
@@ -178,9 +193,9 @@ namespace LudoGame.Controller
             .First(t => t.Zone == Zone.Home && t.Color == piece.Color);
 
             _stepsMoved[piece] = -1;
-            piece.CurrentTile = homeTile;
-            
-            _currentDiceValue = _dice.Sides;
+            _piecePositions[piece] = homeTile;
+
+            _hasBonusTurn = true; ;
         }
         private void CheckGameEndInternal()
         {
