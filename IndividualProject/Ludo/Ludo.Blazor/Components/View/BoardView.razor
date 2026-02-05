@@ -39,7 +39,8 @@
                                 }
                                 else
                                 {
-                                    <div class="piece disabled @piece.Color.ToString().ToLower()"></div>
+                                    <div class="piece disabled @piece.Color.ToString().ToLower() @(piece == KilledPiece ? "killed" : "")">
+                                    </div>
                                 }
                             }
                         }
@@ -58,6 +59,8 @@
     [Parameter] public EventCallback<Piece> OnPieceClicked { get; set; }
     [Parameter] public EventCallback<Piece> OnPieceHover { get; set; }
     [Parameter] public EventCallback OnPieceHoverOut { get; set; }
+    [Parameter] public Piece? KilledPiece { get; set; }
+
 
     string GetTileClass(Tile tile)
     {

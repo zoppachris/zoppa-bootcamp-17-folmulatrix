@@ -16,7 +16,7 @@ namespace Ludo.Game.Controller
         private readonly Dictionary<Piece, int> _stepsMoved;
         private int _currentDiceValue;
         private int _currentPlayerIndex;
-        public int CurrentDiceValue => _currentDiceValue;
+        public Dice Dice => _dice;
         public List<Player> Players => _players;
         public Board Board => _board;
         public Dictionary<Player, List<Piece>> PlayersPieces => _pieceInHands;
@@ -54,11 +54,29 @@ namespace Ludo.Game.Controller
         {
             return _pieceInHands[player];
         }
+        public Dictionary<Tile, List<Piece>> GetPiecesOnTiles()
+        {
+            return _pieceInHands
+                .SelectMany(p => p.Value)
+                .Where(p => p.CurrentTile != null)
+                .GroupBy(p => p.CurrentTile!)
+                .ToDictionary(g => g.Key, g => g.ToList());
+        }
         public List<Piece> GetMoveablePieces(Player player)
         {
             return _pieceInHands[player]
                 .Where(p => CanMovePiece(player, p))
                 .ToList();
+        }
+        public Tile? GetDestinationTile(Piece piece, int diceValue)
+        {
+            var path = _board.ColorPaths[piece.Color];
+
+            if (_stepsMoved[piece] == -1)
+                return diceValue == _dice.Sides ? path[0] : null;
+
+            int target = _stepsMoved[piece] + diceValue;
+            return target < path.Count ? path[target] : null;
         }
         public void MovePiece(Player player, Piece piece)
         {
