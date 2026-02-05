@@ -1,0 +1,11 @@
+@using Ludo.Game.Controller
+@using Ludo.Game.Models.Player
+
+<div class="current-player @Player.Color.ToString().ToLower()">
+    <span class="label">Current Turn</span>
+    <span class="name">@Player.Name</span>
+</div>
+
+@code {
+    [Parameter] public Player Player { get; set; } = default!;
+}

@@ -1,0 +1,16 @@
+<div class="dice-panel">
+    <button class="dice-btn @(View.IsRolling ? "rolling" : "")" disabled="@(!View.CanRollDice || View.IsRolling)"
+        @onclick="OnRoll">
+        🎲
+    </button>
+
+    @if (View.DisplayDiceValue > 0)
+    {
+        <span class="dice-value">@View.DisplayDiceValue</span>
+    }
+</div>
+
+@code {
+    [Parameter] public GameViewState View { get; set; } = default!;
+    [Parameter] public EventCallback OnRoll { get; set; }
+}

@@ -26,120 +26,50 @@ else
         <div class="game-card">
             <div class="game-main">
                 <div class="player-panel">
-                    <div class="current-player @CurrentPlayer.Color.ToString().ToLower()">
-                        <span class="label">Current Turn</span>
-                        <span class="name">@CurrentPlayer.Name</span>
-                    </div>
-
-                    <div class="dice-panel">
-                        <button class="dice-btn @(isRolling ? "rolling" : "")" disabled="@(!canRollDice || isRolling)"
-                            @onclick="RollDiceAnimated">
-                            🎲
-                        </button>
-
-                        @if (displayDiceValue > 0)
-                        {
-                            <span class="dice-value">@displayDiceValue</span>
-                        }
-                    </div>
+                    <PlayerTurnPanel Player="CurrentPlayer" />
+                    <DicePanel View="View" OnRoll="RollDiceAnimated" />
                 </div>
 
-                <BoardView Board="Board" PiecesOnTiles="PiecesOnTiles" ClickablePieces="clickablePieces"
-                    PreviewTile="previewTile" OnPieceHover="OnPieceHover" OnPieceHoverOut="OnPieceHoverOut"
-                    OnPieceClicked="OnPieceClicked" KilledPiece="killedPiece" />
+                <BoardView Board="CurrentGame.Board" PiecesOnTiles="View.PiecesOnTiles(CurrentGame)"
+                    ClickablePieces="clickablePieces" PreviewTile="previewTile" KilledPiece="killedPiece"
+                    OnPieceClicked="OnPieceClicked" OnPieceHover="OnPieceHover" OnPieceHoverOut="ClearPreview" />
             </div>
 
-            <div class="game-log">
-                <div class="log-header" @onclick="ToggleLog">
-                    <span>Game Log</span>
-                    <span class="log-toggle">
-                        @(isLogExpanded ? "Hide" : "Show")
-                    </span>
-                </div>
-                <div class="log-list">
-                    @foreach (var log in (isLogExpanded ? gameLogs : gameLogs.TakeLast(5)))
-                    {
-                        <div class="log-item @log.Type.ToString().ToLower() @(log == lastLog ? "latest" : "")"
-                            style="--player-color:@GetPlayerColor(log.Player)">
-                            <span class="time">@log.Time.ToString("HH:mm:ss")</span>
-                            <span class="text">@log.Message</span>
-                        </div>
-                    }
-                </div>
-            </div>
+            <GameLogPanel Logs="gameLogs" LastLog="lastLog" />
 
-            @if (showWinnerModal)
-            {
-                <div class="modal-backdrop">
-                    <div class="modal">
-                        <h2>🏆 Winner</h2>
-                        <p>@winner!.Name wins the game!</p>
-                        <button class="btn-primary" @onclick="ResetGame">
-                            Play Again
-                        </button>
-                    </div>
-                </div>
-            }
-
+            <WinnerModal Visible="showWinnerModal" Winner="winner" OnRestart="ResetGame" />
         </div>
     </div>
 }
 
 @code {
     GameController CurrentGame => Session.Game!;
-    Board Board => CurrentGame.Board!;
     Player CurrentPlayer => CurrentGame.GetCurrentPlayer();
+    Board Board => CurrentGame.Board!;
 
-    Dictionary<Piece, Tile?> animatingPieces = new();
-    bool isPieceAnimating = false;
-    Dictionary<Tile, List<Piece>> PiecesOnTiles =>
-    Session.Game!.PlayersPieces
-    .SelectMany(kvp => kvp.Value)
-    .Select(p =>
-    {
-        var tile = animatingPieces.ContainsKey(p)
-    ? animatingPieces[p]
-    : p.CurrentTile;
+    GameViewState View = new();
 
-        return (piece: p, tile);
-    })
-    .Where(x => x.tile != null)
-    .GroupBy(x => x.tile!)
-    .ToDictionary(
-    g => g.Key,
-    g => g.Select(x => x.piece).ToList()
-    );
-    Tile? previewTile;
     HashSet<Piece> clickablePieces = new();
+    Tile? previewTile;
     Piece? killedPiece;
-
-
-    bool canRollDice = true;
-    bool isRolling = false;
-    int displayDiceValue = 0;
 
     bool showWinnerModal;
     Player? winner;
+
     List<GameLog> gameLogs = new();
     GameLog? lastLog;
-    bool isLogExpanded;
 
     protected override void OnInitialized()
     {
-        if (Session.Game == null)
-            return;
-
         Log($"Turn → {CurrentPlayer.Name}", GameLogType.Turn, CurrentPlayer);
 
         CurrentGame.OnCaptured += async (attacker, victim) =>
         {
             Log($"{attacker.Name} captured a {victim.Color} piece 💥", GameLogType.Kill, attacker);
-
             killedPiece = victim;
             StateHasChanged();
 
-            await Task.Delay(600); // durasi animasi
-
+            await Task.Delay(600);
             killedPiece = null;
             StateHasChanged();
         };
@@ -147,152 +77,81 @@ else
         CurrentGame.OnGameEnded += OnGameEnded;
     }
 
-    int RollDice()
+    async Task RollDiceAnimated()
     {
-        canRollDice = false;
+        View.StartRolling();
 
-        int value = CurrentGame.RollDice();
-        Log($"{CurrentPlayer.Name} rolled {value}", GameLogType.Dice, CurrentPlayer);
+        await View.FakeRolling(CurrentGame.Dice.Sides);
+        View.StopRolling(CurrentGame.RollDice());
 
-        clickablePieces = CurrentGame
-        .GetMoveablePieces(CurrentPlayer)
-        .ToHashSet();
+        Log($"{CurrentPlayer.Name} rolled {View.DisplayDiceValue}", GameLogType.Dice, CurrentPlayer);
+
+        clickablePieces = CurrentGame.GetMoveablePieces(CurrentPlayer).ToHashSet();
 
         if (clickablePieces.Count == 0)
         {
             Log($"{CurrentPlayer.Name} has no valid move", GameLogType.Info, CurrentPlayer);
             EndTurn();
         }
-        else
-        {
-            Log($"{clickablePieces.Count} piece(s) can be moved", GameLogType.Info, CurrentPlayer);
-        }
-
-        return value;
     }
 
-    async Task RollDiceAnimated()
+    async void OnPieceClicked(Piece piece)
     {
-        if (isRolling) return;
+        if (!clickablePieces.Contains(piece) || View.IsAnimating)
+            return;
 
-        isRolling = true;
-        displayDiceValue = 0;
-        StateHasChanged();
+        clickablePieces.Clear();
+        View.IsAnimating = true;
 
-        // fake rolling numbers
-        var random = new Random();
-        for (int i = 0; i < 10; i++)
+        foreach (var tile in View.GetMovePath(Board, piece, CurrentGame.Dice.Sides))
         {
-            displayDiceValue = random.Next(1, CurrentGame.Dice.Sides + 1);
+            View.AnimatePiece(piece, tile);
+            await Task.Delay(250);
             StateHasChanged();
-            await Task.Delay(80);
         }
 
-        displayDiceValue = RollDice();
+        View.ClearAnimation(piece);
 
-        isRolling = false;
+        CurrentGame.MovePiece(CurrentPlayer, piece);
+
+        View.IsAnimating = false;
+        AfterMove(piece);
         StateHasChanged();
+    }
+
+    void AfterMove(Piece piece)
+    {
+        if (piece.CurrentTile?.Zone == Zone.Goal)
+            Log($"{CurrentPlayer.Name} reached goal ⭐", GameLogType.Action, CurrentPlayer);
+
+        if (!CurrentGame.IsTurnFinished())
+        {
+            Log($"{CurrentPlayer.Name} gets another turn 🎲", GameLogType.Dice, CurrentPlayer);
+            View.ResetDice();
+        }
+        else
+        {
+            EndTurn();
+        }
     }
 
     void EndTurn()
     {
         previewTile = null;
         clickablePieces.Clear();
-        canRollDice = true;
+        View.ResetDice();
 
         CurrentGame.NextTurn();
-
-        Log($"Turn → {CurrentPlayer.Name}", GameLogType.Turn);
+        Log($"Turn → {CurrentPlayer.Name}", GameLogType.Turn, CurrentPlayer);
     }
 
     void OnPieceHover(Piece piece)
     {
         if (!clickablePieces.Contains(piece)) return;
-
-        previewTile = GetDestinationTile(piece);
+        previewTile = View.GetDestinationTile(Board, piece);
     }
 
-    void OnPieceHoverOut()
-    {
-        previewTile = null;
-    }
-
-    List<Tile> GetMovePath(Piece piece)
-    {
-        var path = Board.ColorPaths[piece.Color];
-
-        if (piece.CurrentTile == null || piece.CurrentTile.Zone == Zone.Home)
-        {
-            return displayDiceValue == CurrentGame.Dice.Sides ? new List<Tile> { path[0] } : new();
-        }
-
-        int start = path.IndexOf(piece.CurrentTile);
-        int end = start + displayDiceValue;
-
-        if (end >= path.Count)
-            return new();
-
-        return path.Skip(start + 1).Take(displayDiceValue).ToList();
-    }
-
-    async void OnPieceClicked(Piece piece)
-    {
-        if (!clickablePieces.Contains(piece) || isPieceAnimating)
-            return;
-
-        isPieceAnimating = true;
-        clickablePieces.Clear();
-
-        var movePath = GetMovePath(piece);
-
-        foreach (var tile in movePath)
-        {
-            animatingPieces[piece] = tile;
-            StateHasChanged();
-            await Task.Delay(250); // kecepatan langkah
-        }
-
-        animatingPieces.Remove(piece);
-
-        CurrentGame.MovePiece(CurrentPlayer, piece);
-
-        isPieceAnimating = false;
-
-        AfterMove(piece);
-    }
-
-    void AfterMove(Piece piece)
-    {
-        if (piece.CurrentTile?.Zone == Zone.Goal)
-        {
-            Log($"{CurrentPlayer.Name} reached goal ⭐", GameLogType.Action, CurrentPlayer);
-        }
-
-        if (!CurrentGame.IsTurnFinished())
-        {
-            Log($"{CurrentPlayer.Name} gets another turn 🎲", GameLogType.Dice, CurrentPlayer);
-            canRollDice = true;
-        }
-        else
-        {
-            EndTurn();
-        }
-
-        StateHasChanged();
-    }
-
-    Tile? GetDestinationTile(Piece piece)
-    {
-        var path = Board.ColorPaths[piece.Color];
-
-        if (piece.CurrentTile == null || piece.CurrentTile.Zone == Zone.Home)
-            return displayDiceValue == 6 ? path[0] : null;
-
-        int index = path.IndexOf(piece.CurrentTile);
-        int target = index + displayDiceValue;
-
-        return target < path.Count ? path[target] : null;
-    }
+    void ClearPreview() => previewTile = null;
 
     void OnGameEnded(Player player)
     {
@@ -307,10 +166,7 @@ else
         Nav.NavigateTo("/setup", true);
     }
 
-    void Log(
-    string message,
-    GameLogType type = GameLogType.Info,
-    Player? player = null)
+    void Log(string message, GameLogType type, Player? player)
     {
         gameLogs.Add(new GameLog(message, type, DateTime.Now, player));
         lastLog = gameLogs.Last();
@@ -319,20 +175,5 @@ else
             gameLogs.RemoveAt(0);
     }
 
-    void ToggleLog()
-    {
-        isLogExpanded = !isLogExpanded;
-    }
-
-    string GetPlayerColor(Player? player)
-    {
-        return player == null
-        ? "#aaa"
-        : player.Color.ToString().ToLower();
-    }
-
-    void BackToHome()
-    {
-        Nav.NavigateTo("/");
-    }
+    void BackToHome() => Nav.NavigateTo("/");
 }

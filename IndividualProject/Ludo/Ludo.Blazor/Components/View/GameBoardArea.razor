@@ -1,0 +1,28 @@
+@using Ludo.Game.Controller
+@using Ludo.Game.Models.Piece
+@using Ludo.Game.Models.Board
+
+<div class="game-main">
+    <div class="player-panel">
+        <PlayerTurnPanel Game="Game" />
+        <DicePanel View="ViewState" OnRoll="OnRollDice" />
+    </div>
+
+    <BoardView Board="Game.Board" PiecesOnTiles="ViewState.PiecesOnTiles(Game)" ClickablePieces="ClickablePieces"
+        PreviewTile="PreviewTile" KilledPiece="KilledPiece" OnPieceClicked="OnPieceClicked" OnPieceHover="OnPieceHover"
+        OnPieceHoverOut="OnPieceHoverOut" />
+</div>
+
+@code {
+    [Parameter] public GameController Game { get; set; } = default!;
+    [Parameter] public GameViewState ViewState { get; set; } = default!;
+
+    [Parameter] public HashSet<Piece> ClickablePieces { get; set; } = new();
+    [Parameter] public Tile? PreviewTile { get; set; }
+    [Parameter] public Piece? KilledPiece { get; set; }
+
+    [Parameter] public EventCallback OnRollDice { get; set; }
+    [Parameter] public EventCallback<Piece> OnPieceClicked { get; set; }
+    [Parameter] public EventCallback<Piece> OnPieceHover { get; set; }
+    [Parameter] public EventCallback OnPieceHoverOut { get; set; }
+}

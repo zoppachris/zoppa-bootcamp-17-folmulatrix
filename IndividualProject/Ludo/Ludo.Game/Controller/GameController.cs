@@ -16,6 +16,7 @@ namespace Ludo.Game.Controller
         private readonly Dictionary<Piece, int> _stepsMoved;
         private int _currentDiceValue;
         private int _currentPlayerIndex;
+        private bool _hasBonusTurn;
         public Dice Dice => _dice;
         public List<Player> Players => _players;
         public Board Board => _board;
@@ -44,39 +45,23 @@ namespace Ludo.Game.Controller
         {
             _currentPlayerIndex = 0;
             _currentDiceValue = 0;
+            _hasBonusTurn = false;
         }
         public int RollDice()
         {
             _currentDiceValue = _random.Next(1, _dice.Sides + 1);
+            _hasBonusTurn = _currentDiceValue == _dice.Sides;
             return _currentDiceValue;
         }
         public List<Piece> GetPieces(Player player)
         {
             return _pieceInHands[player];
         }
-        public Dictionary<Tile, List<Piece>> GetPiecesOnTiles()
-        {
-            return _pieceInHands
-                .SelectMany(p => p.Value)
-                .Where(p => p.CurrentTile != null)
-                .GroupBy(p => p.CurrentTile!)
-                .ToDictionary(g => g.Key, g => g.ToList());
-        }
         public List<Piece> GetMoveablePieces(Player player)
         {
             return _pieceInHands[player]
                 .Where(p => CanMovePiece(player, p))
                 .ToList();
-        }
-        public Tile? GetDestinationTile(Piece piece, int diceValue)
-        {
-            var path = _board.ColorPaths[piece.Color];
-
-            if (_stepsMoved[piece] == -1)
-                return diceValue == _dice.Sides ? path[0] : null;
-
-            int target = _stepsMoved[piece] + diceValue;
-            return target < path.Count ? path[target] : null;
         }
         public void MovePiece(Player player, Piece piece)
         {
@@ -104,14 +89,14 @@ namespace Ludo.Game.Controller
 
             if (targetTile.Zone == Zone.Goal)
             {
-                _currentDiceValue = _dice.Sides;
+                _hasBonusTurn = true;
             }
 
             CheckGameEndInternal();
         }
         public bool IsTurnFinished()
         {
-            return _currentDiceValue != _dice.Sides;
+            return !_hasBonusTurn;
         }
         public void NextTurn()
         {
@@ -201,7 +186,7 @@ namespace Ludo.Game.Controller
             _stepsMoved[piece] = -1;
             piece.CurrentTile = homeTile;
 
-            _currentDiceValue = _dice.Sides;
+            _hasBonusTurn = true; ;
         }
         private void CheckGameEndInternal()
         {

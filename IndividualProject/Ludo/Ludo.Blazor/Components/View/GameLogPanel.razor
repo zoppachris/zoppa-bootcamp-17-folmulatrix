@@ -1,0 +1,30 @@
+@using Ludo.Game.Models.Player
+<div class="game-log">
+    <div class="log-header" @onclick="Toggle">
+        <span>Game Log</span>
+        <span class="log-toggle">@(_expanded ? "Hide" : "Show")</span>
+    </div>
+
+    <div class="log-list">
+        @foreach (var log in (_expanded ? Logs : Logs.TakeLast(5)))
+        {
+            <div class="log-item @log.Type.ToString().ToLower() @(log == LastLog ? "latest" : "")"
+                style="--player-color:@GetColor(log.Player)">
+                <span class="time">@log.Time.ToString("HH:mm:ss")</span>
+                <span class="text">@log.Message</span>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public IReadOnlyList<GameLog> Logs { get; set; } = Array.Empty<GameLog>();
+    [Parameter] public GameLog? LastLog { get; set; }
+
+    bool _expanded;
+
+    void Toggle() => _expanded = !_expanded;
+
+    string GetColor(Player? player)
+    => player == null ? "#aaa" : player.Color.ToString().ToLower();
+}
