@@ -1,0 +1,26 @@
+<button class="add-player-button"
+        @onclick="HandleAddPlayer"
+        disabled="@IsDisabled">
+    + Add Player
+</button>
+
+@code {
+    [Parameter]
+    public int CurrentPlayerCount { get; set; }
+
+    [Parameter]
+    public int MaxPlayers { get; set; } = 4;
+
+    [Parameter]
+    public EventCallback OnAddPlayer { get; set; }
+
+    protected bool IsDisabled => CurrentPlayerCount >= MaxPlayers;
+
+    protected async Task HandleAddPlayer()
+    {
+        if (IsDisabled)
+            return;
+
+        await OnAddPlayer.InvokeAsync();
+    }
+}

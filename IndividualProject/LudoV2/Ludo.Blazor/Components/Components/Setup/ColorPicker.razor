@@ -1,0 +1,50 @@
+@using Ludo.Game.Enums
+<div class="color-picker">
+    @foreach (var color in AvailableColors)
+    {
+        var isSelected = SelectedColor == color;
+        var isDisabled = DisabledColors?.Contains(color) == true;
+
+        <button class="color-item @(isSelected ? "selected" : "")"
+                style="background-color:@GetColorCss(color)"
+                disabled="@isDisabled"
+                @onclick="() => SelectColor(color)">
+        </button>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Color? SelectedColor { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<Color>? DisabledColors { get; set; }
+
+    [Parameter]
+    public EventCallback<Color> OnColorSelected { get; set; }
+
+    protected IReadOnlyList<Color> AvailableColors =
+    [
+        Color.Red,
+            Color.Blue,
+            Color.Green,
+            Color.Yellow
+    ];
+
+    protected async Task SelectColor(Color color)
+    {
+        if (DisabledColors?.Contains(color) == true)
+            return;
+
+        await OnColorSelected.InvokeAsync(color);
+    }
+
+    protected string GetColorCss(Color color) => color switch
+    {
+        Color.Red => "var(--player-red)",
+        Color.Blue => "var(--player-blue)",
+        Color.Green => "var(--player-green)",
+        Color.Yellow => "var(--player-yellow)",
+        _ => "#ccc"
+    };
+}

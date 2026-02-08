@@ -1,0 +1,6 @@
+.app-root {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: #f6f7f8;
+}

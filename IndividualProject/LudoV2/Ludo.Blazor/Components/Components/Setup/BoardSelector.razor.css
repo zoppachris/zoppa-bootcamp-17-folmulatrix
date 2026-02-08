@@ -1,0 +1,26 @@
+.board-selector {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.board-item {
+  padding: 1rem;
+  border-radius: 14px;
+  border: 2px solid #e0e0e0;
+  background: white;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    transform 0.15s ease;
+}
+
+.board-item:hover {
+  transform: translateY(-2px);
+}
+
+.board-item.selected {
+  border-color: var(--color-primary);
+}

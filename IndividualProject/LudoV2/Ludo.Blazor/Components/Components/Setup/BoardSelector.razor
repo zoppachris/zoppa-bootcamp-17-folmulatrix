@@ -1,0 +1,29 @@
+<div class="board-selector">
+    @foreach (var board in AvailableBoards)
+    {
+        <button class="board-item @(board == SelectedBoard ? "selected" : "")" disabled="@(board == BoardType.Big)"
+                @onclick="() => SelectBoard(board)">
+            @board.ToString()
+        </button>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public BoardType? SelectedBoard { get; set; }
+
+    [Parameter]
+    public EventCallback<BoardType?> SelectedBoardChanged { get; set; }
+
+    protected IReadOnlyList<BoardType> AvailableBoards =
+    [
+        BoardType.Standard,
+            BoardType.Big
+    ];
+
+    protected async Task SelectBoard(BoardType board)
+    {
+        SelectedBoard = board;
+        await SelectedBoardChanged.InvokeAsync(board);
+    }
+}

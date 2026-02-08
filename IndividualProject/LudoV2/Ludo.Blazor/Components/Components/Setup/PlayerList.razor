@@ -1,0 +1,61 @@
+@using Ludo.Game.Enums
+<div class="player-list">
+    @for (var i = 0; i < Players.Count; i++)
+    {
+        var index = i;
+        var isLastPlayer = index == Players.Count - 1;
+        var canRemove = Players.Count > 2 && isLastPlayer;
+
+        <PlayerSetupCard Index="@(index + 1)" Player="@Players[index]" DisabledColors="@GetDisabledColors(index)"
+                         CanRemove="@canRemove" OnRemoveRequested="RemovePlayer" OnNameChanged="name => UpdatePlayerName(index, name)"
+                         OnColorChanged="color => UpdatePlayerColor(index, color)" />
+    }
+
+    <AddPlayerButton CurrentPlayerCount="@Players.Count" OnAddPlayer="AddPlayer" />
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public List<PlayerSetupModel> Players { get; set; } = [];
+
+    [Parameter]
+    public EventCallback<List<PlayerSetupModel>> PlayersChanged { get; set; }
+
+    protected IReadOnlyList<Color> GetDisabledColors(int index)
+    {
+        return Players
+            .Where((p, i) => i != index && p.Color.HasValue)
+            .Select(p => p.Color!.Value)
+            .ToList();
+    }
+
+    protected async Task UpdatePlayerName(int index, string name)
+    {
+        Players[index].Name = name;
+        await PlayersChanged.InvokeAsync(Players);
+    }
+
+    protected async Task UpdatePlayerColor(int index, Color color)
+    {
+        Players[index].Color = color;
+        await PlayersChanged.InvokeAsync(Players);
+    }
+
+    protected async Task AddPlayer()
+    {
+        if (Players.Count >= 4)
+            return;
+
+        Players.Add(new PlayerSetupModel());
+        await PlayersChanged.InvokeAsync(Players);
+    }
+
+    protected async Task RemovePlayer()
+    {
+        if (Players.Count == 2)
+            return;
+
+        Players.RemoveAt(Players.Count - 1);
+        await PlayersChanged.InvokeAsync(Players);
+    }
+}

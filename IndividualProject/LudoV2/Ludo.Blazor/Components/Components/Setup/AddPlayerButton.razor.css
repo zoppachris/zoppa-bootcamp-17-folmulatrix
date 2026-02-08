@@ -1,0 +1,21 @@
+.add-player-button {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 10px;
+  border: 2px dashed var(--color-primary);
+  background: transparent;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.add-player-button:hover:not(:disabled) {
+  background: var(--color-primary);
+  color: white;
+}
+
+.add-player-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

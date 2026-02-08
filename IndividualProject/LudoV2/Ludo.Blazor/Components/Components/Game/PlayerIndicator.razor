@@ -1,0 +1,27 @@
+@using Ludo.Game.Interfaces
+@using Ludo.Game.Enums
+
+<div class="player-indicator">
+    <div class="player-indicator-card @ColorClass">
+        <span class="player-label">Current Turn</span>
+
+        <div class="player-info">
+            <span class="player-color-dot"></span>
+            <span class="player-name">@Player.Name</span>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public IPlayer Player { get; set; } = default!;
+
+    private string ColorClass => Player.Color switch
+    {
+        Color.Red => "player-red",
+        Color.Blue => "player-blue",
+        Color.Green => "player-green",
+        Color.Yellow => "player-yellow",
+        _ => string.Empty
+    };
+}

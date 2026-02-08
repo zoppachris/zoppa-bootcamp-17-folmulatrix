@@ -1,0 +1,35 @@
+<div class="dice-indicator">
+    <div class="dice-card">
+        <span class="dice-label">Dice</span>
+
+        <div class="dice-value @(IsRolling ? "rolling" : "")">
+            @(DiceValue?.ToString() ?? "-")
+        </div>
+
+        <button class=" dice-roll-btn" disabled="@(!CanRoll || IsRolling)" @onclick="OnRollClicked">
+            Roll
+        </button>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int? DiceValue { get; set; }
+
+    [Parameter]
+    public bool CanRoll { get; set; }
+
+    [Parameter]
+    public bool IsRolling { get; set; }
+
+    [Parameter]
+    public EventCallback OnRoll { get; set; }
+
+    private async Task OnRollClicked()
+    {
+        if (!CanRoll)
+            return;
+
+        await OnRoll.InvokeAsync();
+    }
+}

@@ -1,0 +1,25 @@
+<div class="dice-selector">
+    @foreach (var dice in DiceOptions)
+    {
+        <button class="dice-item @(dice == SelectedDice ? "selected" : "")"
+                @onclick="() => SelectDice(dice)">
+            @dice
+        </button>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int? SelectedDice { get; set; }
+
+    [Parameter]
+    public EventCallback<int?> SelectedDiceChanged { get; set; }
+
+    protected IReadOnlyList<int> DiceOptions = [6, 8, 10];
+
+    protected async Task SelectDice(int dice)
+    {
+        SelectedDice = dice;
+        await SelectedDiceChanged.InvokeAsync(dice);
+    }
+}

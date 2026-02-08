@@ -1,0 +1,90 @@
+@using Ludo.Game.Enums
+@using Ludo.Game.Models.Board
+@using Ludo.Game.Models.Piece
+
+<div class="board-tile @TileCssClass @(IsPreviewTile ? "tile-preview" : "")" style="@InlineStyle">
+
+    @if (ShowDebug)
+    {
+        <span class="tile-debug">@DebugText</span>
+    }
+
+    @if (Pieces.Any())
+    {
+        <div class="piece-stack">
+            @foreach (var piece in Pieces)
+            {
+                bool clickable = ClickablePieces.Contains(piece);
+                if (clickable)
+                {
+                    <div class="piece clickable piece-@piece.Color.ToString().ToLower()"
+                         @onclick="() => OnPieceClicked.InvokeAsync(piece)" @onmouseenter="() => OnPieceHover.InvokeAsync(piece)"
+                         @onmouseleave="() => OnPieceHoverOut.InvokeAsync()">
+                    </div>
+                }
+                else
+                {
+                    <div class="piece piece-@piece.Color.ToString().ToLower()">
+                    </div>
+                }
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Tile Tile { get; set; } = default!;
+
+    [Parameter]
+    public bool IsPreviewTile { get; set; } = false;
+
+    [Parameter]
+    public IReadOnlyList<Piece> Pieces { get; set; } = [];
+
+    [Parameter]
+    public HashSet<Piece> ClickablePieces { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<Piece> OnPieceClicked { get; set; }
+
+    [Parameter]
+    public EventCallback<Piece> OnPieceHover { get; set; }
+
+    [Parameter]
+    public EventCallback OnPieceHoverOut { get; set; }
+
+    [Parameter]
+    public bool ShowDebug { get; set; }
+
+    [Parameter]
+    public string? DebugText { get; set; }
+
+    private string TileCssClass
+    {
+        get
+        {
+            var classes = new List<string> { };
+
+            classes.Add(Tile.Zone switch
+            {
+                Zone.Main => "tile-path",
+                Zone.Home => "tile-home",
+                Zone.Start => "tile-start",
+                Zone.Finish => "tile-finish",
+                Zone.Goal => "tile-goal",
+                _ => "tile-empty"
+            });
+
+            if (Tile.Zone == Zone.Main && Tile.IsSafe)
+                classes.Add("tile-safe");
+
+            return string.Join(" ", classes);
+        }
+    }
+
+    private string InlineStyle
+        => Tile.Color.HasValue
+            ? $"--tile-color: var(--player-{Tile.Color.Value.ToString().ToLower()});"
+            : string.Empty;
+}

@@ -1,0 +1,7 @@
+<button class="play-button" @onclick="OnClick">
+    Play
+</button>
+
+@code {
+    [Parameter] public EventCallback OnClick { get; set; }
+}

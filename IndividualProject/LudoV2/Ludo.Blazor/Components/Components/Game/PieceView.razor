@@ -1,0 +1,20 @@
+@using Ludo.Game.Enums
+@using Ludo.Game.Interfaces
+@using Ludo.Game.Models.Piece
+
+<div class="piece @ColorClass">
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public Piece Piece { get; set; }
+
+    private string ColorClass => Piece.Color switch
+    {
+        Color.Red => "piece-red",
+        Color.Blue => "piece-blue",
+        Color.Green => "piece-green",
+        Color.Yellow => "piece-yellow",
+        _ => "piece-default"
+    };
+}

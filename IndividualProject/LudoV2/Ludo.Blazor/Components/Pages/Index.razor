@@ -1,0 +1,16 @@
+@page "/"
+@using Ludo.Blazor.Components.Components.Home
+@inject NavigationManager Nav
+
+<div class="page page-home page--center page--fullscreen">
+    <HomeHero />
+    <PlayButton OnClick="GoToSetup" />
+</div>
+
+
+@code {
+    void GoToSetup()
+    {
+        Nav.NavigateTo("/setup");
+    }
+}

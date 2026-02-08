@@ -1,0 +1,48 @@
+@using Ludo.Game.Interfaces
+@using Ludo.Game.Models.Board
+@using Ludo.Game.Models.Piece
+
+<div class="board-container">
+    <div class="board-grid" style="grid-template-columns: repeat(@GridSize, 1fr);
+        grid-template-rows: repeat(@GridSize, 1fr);">
+
+        @for (int row = 0; row < GridSize; row++)
+        {
+            @for (int col = 0; col < GridSize; col++)
+            {
+                Tile? tile = Board.Tiles[row, col];
+
+                List<Piece>? piecesOnTile = PiecesPostion
+                .Where(p => p.Value == tile)
+                .Select(p => p.Key)
+                .ToList();
+
+                <div class="board-cell">
+                    <BoardTile IsPreviewTile="PreviewTile == Board.Tiles[row, col]" Tile="tile" Pieces="piecesOnTile"
+                               ClickablePieces="ClickablePieces" OnPieceClicked="OnPieceClicked" OnPieceHover="OnPieceHover"
+                               OnPieceHoverOut="OnPieceHoverOut" DebugText="@($"{row},{col}")" ShowDebug="false" />
+                </div>
+            }
+        }
+    </div>
+</div>
+
+
+@code {
+    [Parameter, EditorRequired]
+    public IBoard Board { get; set; }
+    [Parameter]
+    public Dictionary<Piece, Tile?> PiecesPostion { get; set; } = new();
+    [Parameter]
+    public HashSet<Piece> ClickablePieces { get; set; } = new();
+    [Parameter]
+    public Tile? PreviewTile { get; set; }
+    [Parameter]
+    public EventCallback<Piece> OnPieceClicked { get; set; }
+    [Parameter]
+    public EventCallback<Piece> OnPieceHover { get; set; }
+    [Parameter]
+    public EventCallback OnPieceHoverOut { get; set; }
+
+    private int GridSize => Board.Tiles.GetLength(0);
+}

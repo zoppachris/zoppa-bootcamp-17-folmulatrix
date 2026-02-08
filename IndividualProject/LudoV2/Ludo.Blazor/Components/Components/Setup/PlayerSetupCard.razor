@@ -1,0 +1,56 @@
+@using Ludo.Game.Enums
+<div class="player-card">
+    <div class="player-header">
+        <span>Player @Index</span>
+
+        @if (CanRemove)
+        {
+            <button class="remove-player-button" @onclick="RequestRemove">
+                ✕
+            </button>
+        }
+    </div>
+
+    <input maxlength="10" class="player-name-input" placeholder="Player name" value="@Player.Name"
+           @oninput="OnNameInput" />
+
+    <ColorPicker SelectedColor="@Player.Color" DisabledColors="@DisabledColors" OnColorSelected="OnColorSelected" />
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public int Index { get; set; }
+
+    [Parameter, EditorRequired]
+    public PlayerSetupModel Player { get; set; } = default!;
+
+    [Parameter]
+    public IReadOnlyList<Color>? DisabledColors { get; set; }
+
+    [Parameter]
+    public bool CanRemove { get; set; }
+
+    [Parameter]
+    public EventCallback OnRemoveRequested { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnNameChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<Color> OnColorChanged { get; set; }
+
+    protected async Task OnNameInput(ChangeEventArgs e)
+    {
+        await OnNameChanged.InvokeAsync(e.Value?.ToString() ?? string.Empty);
+    }
+
+    protected async Task OnColorSelected(Color color)
+    {
+        await OnColorChanged.InvokeAsync(color);
+    }
+
+    protected async Task RequestRemove()
+    {
+        await OnRemoveRequested.InvokeAsync();
+    }
+}

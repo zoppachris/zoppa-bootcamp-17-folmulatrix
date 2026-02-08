@@ -1,0 +1,101 @@
+.dice-indicator {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.dice-card {
+  width: 140px;
+  padding: 0.75rem 1rem;
+  border-radius: 16px;
+
+  background: #ffffff;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.dice-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.dice-value {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+
+  background: #f4f6f8;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #222;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rolling {
+  animation: diceShake 0.6s infinite;
+}
+
+.dice-roll-btn {
+  width: 100%;
+  padding: 0.45rem 0;
+
+  border-radius: 12px;
+  border: none;
+
+  font-size: 0.9rem;
+  font-weight: 600;
+
+  background: #222;
+  color: #ffffff;
+  cursor: pointer;
+
+  transition:
+    transform 0.1s ease,
+    opacity 0.1s ease;
+}
+
+.dice-roll-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+@media (hover: hover) {
+  .dice-roll-btn:not(:disabled):hover {
+    transform: translateY(-1px);
+  }
+}
+
+@keyframes diceShake {
+  0% {
+    transform: rotate(0deg) translate(0);
+  }
+
+  20% {
+    transform: rotate(10deg) translate(2px, -2px);
+  }
+
+  40% {
+    transform: rotate(-10deg) translate(-2px, 2px);
+  }
+
+  60% {
+    transform: rotate(8deg) translate(2px, 1px);
+  }
+
+  80% {
+    transform: rotate(-8deg) translate(-1px, -2px);
+  }
+
+  100% {
+    transform: rotate(0deg) translate(0);
+  }
+}

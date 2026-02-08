@@ -1,0 +1,62 @@
+@page "/winner"
+@using Ludo.Game.Interfaces
+@inject NavigationManager Nav
+@inject GameSessionService Session
+
+<section class="winner-page">
+    @if (winner != null)
+    {
+        <div class="winner-card player-@winner.Color.ToString().ToLower()">
+
+            <div class="winner-badge">🏆</div>
+
+            <h1 class="winner-title">We Have a Winner!</h1>
+
+            <div class="winner-player">
+                <span class="winner-color-dot"></span>
+                <span class="winner-name">@winner.Name</span>
+            </div>
+
+            <p class="winner-subtitle">
+                Congratulations! You dominated the board 🎲
+            </p>
+
+            <div class="winner-actions">
+                <button class="btn-primary" @onclick="GoHome">
+                    Back to Home
+                </button>
+
+                <button class="btn-secondary" @onclick="PlayAgain">
+                    Play Again
+                </button>
+            </div>
+        </div>
+    }
+</section>
+
+@code {
+    IPlayer? winner;
+
+    protected override void OnInitialized()
+    {
+        if (Session.Winner == null)
+        {
+            GoHome();
+            return;
+        }
+
+        winner = Session.Winner;
+    }
+
+    void GoHome()
+    {
+        Session.GameOver();
+        Nav.NavigateTo("/");
+    }
+
+    void PlayAgain()
+    {
+        Session.Reset();
+        Nav.NavigateTo("/game");
+    }
+}

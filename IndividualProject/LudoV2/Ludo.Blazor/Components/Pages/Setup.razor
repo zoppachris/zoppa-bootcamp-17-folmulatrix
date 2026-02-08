@@ -1,0 +1,115 @@
+@page "/setup"
+@using Ludo.Blazor.Components.Components.Setup
+@using Ludo.Game.Interfaces
+@using Ludo.Game.Models.Dice
+@using Ludo.Game.Models.Player
+@using Ludo.Game.Utils.BoardGenerate
+@inject NavigationManager Nav
+@inject GameSessionService Session
+
+<div class="setup-page">
+
+    <section>
+        <div class="setup-section-title">Board</div>
+        <BoardSelector @bind-SelectedBoard="SelectedBoard" />
+    </section>
+
+    <section>
+        <div class="setup-section-title">Dice</div>
+        <DiceSelector @bind-SelectedDice="SelectedDice" />
+    </section>
+
+    <section>
+        <div class="setup-section-title">Players</div>
+        <PlayerList Players="@Players" PlayersChanged="OnPlayersChanged" />
+    </section>
+
+    <button class="start-game-button" disabled="@(!IsSetupValid)" @onclick="StartGame">
+        Start Game
+    </button>
+
+</div>
+
+@code {
+    protected BoardType? SelectedBoard;
+    protected int? SelectedDice;
+
+    protected List<PlayerSetupModel> Players =
+    [
+        new PlayerSetupModel(),
+            new PlayerSetupModel()
+    ];
+
+    protected bool IsSetupValid => ValidateSetup();
+
+    protected void OnPlayersChanged(List<PlayerSetupModel> players)
+    {
+        Players = players;
+    }
+
+    protected bool ValidateSetup()
+    {
+        if (SelectedBoard == null)
+        {
+            return false;
+        }
+
+        if (SelectedDice == null)
+        {
+            return false;
+        }
+
+        if (Players.Count < 2 || Players.Count > 4)
+        {
+            return false;
+        }
+
+        if (Players.Any(p => string.IsNullOrWhiteSpace(p.Name)))
+        {
+            return false;
+        }
+
+        if (Players.Any(p => p.Color == null))
+        {
+            return false;
+        }
+
+        var usedColors = Players
+            .Select(p => p.Color)
+            .ToList();
+
+        if (usedColors.Distinct().Count() != usedColors.Count)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    protected void StartGame()
+    {
+        if (!IsSetupValid)
+            return;
+
+        List<IPlayer> players = Players
+                .Select(p => (IPlayer)new Player(p.Name!, p.Color!.Value))
+                .ToList();
+
+        IDice dice = new Dice(SelectedDice!.Value);
+
+        IBoard board;
+
+        switch (SelectedBoard)
+        {
+            case BoardType.Big:
+                board = BigBoard.GenerateBoard();
+                break;
+            default:
+                board = StandardBoard.GenerateBoard();
+                break;
+        }
+
+        Session.CreateGame(players, board, dice);
+        Nav.NavigateTo("/game");
+    }
+}
