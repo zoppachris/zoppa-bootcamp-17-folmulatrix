@@ -2,7 +2,7 @@ using Ludo.Game.Enums;
 using Ludo.Game.Models.Board;
 using Ludo.Game.Models.ValueObjects;
 
-namespace Ludo.Game.Utils
+namespace Ludo.Game.Utils.BoardGenerate
 {
     public static class BigBoard
     {

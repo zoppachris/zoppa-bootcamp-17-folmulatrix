@@ -1,5 +1,6 @@
 @page "/players"
 @using Ludo.Game.Enums
+@using Ludo.Game.Interfaces
 @using Ludo.Game.Models.Player
 @inject NavigationManager Nav
 @inject GameSessionService Session
@@ -21,9 +22,9 @@
                         @foreach (var color in AvailableColors)
                         {
                             <button class="color-btn @color.ToString().ToLower()
-                                                                   @(player.Color == color ? " selected" : "")
-                                                                   @(IsColorTaken(color, player) ? " disabled" : "")"
-                                disabled="@IsColorTaken(color, player)" @onclick="() => player.Color = color">
+                                @(player.Color == color ? " selected" : "")
+                                @(IsColorTaken(color, player) ? " disabled" : "")"
+                                    disabled="@IsColorTaken(color, player)" @onclick="() => player.Color = color">
                             </button>
                         }
                     </div>
@@ -79,8 +80,8 @@ Color.Yellow
 
     void StartGame()
     {
-        var players = PlayerForms
-        .Select(p => new Player(p.Name!, p.Color!.Value))
+        List<IPlayer> players = PlayerForms
+        .Select(p => (IPlayer)new Player(p.Name!, p.Color!.Value))
         .ToList();
 
         Session.CreateGame(players);

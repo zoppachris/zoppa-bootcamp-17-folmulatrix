@@ -1,5 +1,6 @@
 using Ludo.Game.Controller;
 using Ludo.Game.Enums;
+using Ludo.Game.Interfaces;
 using Ludo.Game.Models.Board;
 using Ludo.Game.Models.Piece;
 using Ludo.Game.Models.Player;
@@ -8,7 +9,7 @@ namespace Ludo.Game.Utils
 {
     public static class ConsoleRenderer
     {
-        public static void RenderBoard(Board board, GameController game, HashSet<Piece> moveablePieces)
+        public static void RenderBoard(IBoard board, GameController game, HashSet<Piece> moveablePieces)
         {
 
             Dictionary<Tile, List<Piece>> tileToPieces = new Dictionary<Tile, List<Piece>>();

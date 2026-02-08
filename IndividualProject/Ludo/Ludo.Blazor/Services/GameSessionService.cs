@@ -1,17 +1,17 @@
 
 using Ludo.Game.Controller;
+using Ludo.Game.Interfaces;
 using Ludo.Game.Models.Dice;
-using Ludo.Game.Models.Player;
-using Ludo.Game.Utils;
+using Ludo.Game.Utils.BoardGenerate;
 
 public sealed class GameSessionService
 {
     public GameController? Game { get; private set; }
 
-    public void CreateGame(List<Player> players)
+    public void CreateGame(List<IPlayer> players)
     {
-        var board = StandardBoard.GenerateBoard();
-        var dice = new Dice(6);
+        IBoard board = StandardBoard.GenerateBoard();
+        IDice dice = new Dice(6);
 
         Game = new GameController(board, dice, players);
         Game.StartGame();

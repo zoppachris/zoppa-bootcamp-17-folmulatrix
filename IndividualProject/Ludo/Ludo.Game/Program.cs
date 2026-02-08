@@ -1,10 +1,12 @@
 ﻿using Ludo.Game.Controller;
 using Ludo.Game.Enums;
+using Ludo.Game.Interfaces;
 using Ludo.Game.Models.Board;
 using Ludo.Game.Models.Dice;
 using Ludo.Game.Models.Piece;
 using Ludo.Game.Models.Player;
 using Ludo.Game.Utils;
+using Ludo.Game.Utils.BoardGenerate;
 
 namespace Ludo.Game
 {
@@ -13,14 +15,14 @@ namespace Ludo.Game
         static void Main()
         {
             // ===== INIT =====
-            Board board = StandardBoard.GenerateBoard();
-            Dice dice = new Dice(6);
+            IBoard board = StandardBoard.GenerateBoard();
+            IDice dice = new Dice(6);
 
             Console.WriteLine("Welcome to Ludo Game!!!");
 
             Console.WriteLine();
 
-            List<Player> players = PlayerChoose();
+            List<IPlayer> players = PlayerChoose();
 
             Console.WriteLine("\nList of player :");
             foreach (var player in players)
@@ -50,7 +52,7 @@ namespace Ludo.Game
             {
                 Console.Clear();
 
-                Player currentPlayer = game.GetCurrentPlayer();
+                IPlayer currentPlayer = game.GetCurrentPlayer();
                 Console.WriteLine($"🎮 Turn: {currentPlayer.Name} ({currentPlayer.Color})");
 
                 Console.WriteLine("Press ENTER to roll dice...");
@@ -102,7 +104,7 @@ namespace Ludo.Game
             Console.ReadLine();
         }
 
-        private static List<Player> PlayerChoose()
+        private static List<IPlayer> PlayerChoose()
         {
             Console.WriteLine("Choose how many player will play?");
             Console.WriteLine("1. 2 Players");
@@ -111,7 +113,7 @@ namespace Ludo.Game
 
             int choice = ReadChoice(1, 3);
             List<Color> colors = new() { Color.Blue, Color.Green, Color.Red, Color.Yellow };
-            List<Player> players = new();
+            List<IPlayer> players = new();
 
             for (int i = 1; i <= choice + 1; i++)
             {
