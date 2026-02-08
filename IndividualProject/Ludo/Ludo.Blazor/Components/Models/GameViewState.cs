@@ -1,5 +1,6 @@
 using Ludo.Game.Controller;
 using Ludo.Game.Enums;
+using Ludo.Game.Interfaces;
 using Ludo.Game.Models.Board;
 using Ludo.Game.Models.Piece;
 
@@ -73,7 +74,7 @@ public class GameViewState
 
     public List<Tile> GetMovePath(
         GameController game,
-        Board board,
+        IBoard board,
         Piece piece)
     {
         if (DisplayDiceValue <= 0)
@@ -104,7 +105,7 @@ public class GameViewState
 
     public Tile? GetDestinationTile(
         GameController game,
-        Board board,
+        IBoard board,
         Piece piece)
     {
         if (DisplayDiceValue <= 0)

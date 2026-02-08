@@ -1,5 +1,5 @@
 @using Ludo.Game.Controller
-@using Ludo.Game.Models.Player
+@using Ludo.Game.Interfaces
 
 <div class="current-player @Player.Color.ToString().ToLower()">
     <span class="label">Current Turn</span>
@@ -7,5 +7,5 @@
 </div>
 
 @code {
-    [Parameter] public Player Player { get; set; } = default!;
+    [Parameter] public IPlayer Player { get; set; } = default!;
 }

@@ -1,4 +1,4 @@
-@using Ludo.Game.Models.Player
+@using Ludo.Game.Interfaces
 <div class="game-log">
     <div class="log-header" @onclick="Toggle">
         <span>Game Log</span>
@@ -9,7 +9,7 @@
         @foreach (var log in (_expanded ? Logs : Logs.TakeLast(5)))
         {
             <div class="log-item @log.Type.ToString().ToLower() @(log == LastLog ? "latest" : "")"
-                style="--player-color:@GetColor(log.Player)">
+                 style="--player-color:@GetColor(log.Player)">
                 <span class="time">@log.Time.ToString("HH:mm:ss")</span>
                 <span class="text">@log.Message</span>
             </div>
@@ -25,6 +25,6 @@
 
     void Toggle() => _expanded = !_expanded;
 
-    string GetColor(Player? player)
+    string GetColor(IPlayer? player)
     => player == null ? "#aaa" : player.Color.ToString().ToLower();
 }

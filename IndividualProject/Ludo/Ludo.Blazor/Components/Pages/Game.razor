@@ -5,9 +5,9 @@
 @using Ludo.Blazor.Components.View
 @using Ludo.Game.Controller
 @using Ludo.Game.Enums
+@using Ludo.Game.Interfaces
 @using Ludo.Game.Models.Board
 @using Ludo.Game.Models.Piece
-@using Ludo.Game.Models.Player
 
 @if (Session.Game == null)
 {
@@ -48,8 +48,8 @@ else
 
 @code {
     GameController CurrentGame => Session.Game!;
-    Player CurrentPlayer => CurrentGame.GetCurrentPlayer();
-    Board Board => CurrentGame.Board!;
+    IPlayer CurrentPlayer => CurrentGame.GetCurrentPlayer();
+    IBoard Board => CurrentGame.Board!;
 
     GameViewState View = new();
 
@@ -58,7 +58,7 @@ else
     Piece? killedPiece;
 
     bool showWinnerCard;
-    Player? winner;
+    IPlayer? winner;
 
     List<GameLog> gameLogs = new();
     GameLog? lastLog;
@@ -175,7 +175,7 @@ else
 
     void ClearPreview() => previewTile = null;
 
-    void OnGameEnded(Player player)
+    void OnGameEnded(IPlayer player)
     {
         winner = player;
         showWinnerCard = true;
@@ -190,7 +190,7 @@ else
         Nav.NavigateTo("/setup", true);
     }
 
-    void Log(string message, GameLogType type, Player? player)
+    void Log(string message, GameLogType type, IPlayer? player)
     {
         gameLogs.Add(new GameLog(message, type, DateTime.Now, player));
         lastLog = gameLogs.Last();

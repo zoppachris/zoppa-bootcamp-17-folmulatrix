@@ -1,4 +1,4 @@
-@using Ludo.Game.Models.Player
+@using Ludo.Game.Interfaces
 @if (Visible)
 {
     <div class="winner-card">
@@ -16,6 +16,6 @@
 
 @code {
     [Parameter] public bool Visible { get; set; }
-    [Parameter] public Player? Winner { get; set; }
+    [Parameter] public IPlayer? Winner { get; set; }
     [Parameter] public EventCallback OnRestart { get; set; }
 }

@@ -1,17 +1,17 @@
-using Ludo.Game.Models.Player;
+using Ludo.Game.Interfaces;
 
 public class GameLog
 {
     public string Message { get; }
     public GameLogType Type { get; }
     public DateTime Time { get; }
-    public Player? Player { get; }
+    public IPlayer? Player { get; }
 
     public GameLog(
         string message,
         GameLogType type,
         DateTime time,
-        Player? player)
+        IPlayer? player)
     {
         Message = message;
         Type = type;
