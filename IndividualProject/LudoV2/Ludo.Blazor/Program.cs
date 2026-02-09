@@ -6,6 +6,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddScoped<GameSessionService>();
+builder.Services.AddScoped<SoundService>();
+
+builder.Services.AddBlazorBootstrap();
 
 var app = builder.Build();
 

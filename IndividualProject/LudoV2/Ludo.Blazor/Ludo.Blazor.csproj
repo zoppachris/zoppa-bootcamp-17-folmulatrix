@@ -10,4 +10,8 @@
     <ProjectReference Include="..\Ludo.Game\Ludo.Game.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Blazor.Bootstrap" Version="3.4.0" />
+  </ItemGroup>
+
 </Project>

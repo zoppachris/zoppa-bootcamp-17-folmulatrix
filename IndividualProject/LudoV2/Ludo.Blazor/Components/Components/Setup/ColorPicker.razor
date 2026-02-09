@@ -1,14 +1,14 @@
 @using Ludo.Game.Enums
+@inject SoundService Sound
+
 <div class="color-picker">
     @foreach (Color color in AvailableColors)
     {
         bool isSelected = SelectedColor == color;
         bool isDisabled = DisabledColors?.Contains(color) == true;
 
-        <button class="color-item @(isSelected ? "selected" : "")"
-                style="background-color:@GetColorCss(color)"
-                disabled="@isDisabled"
-                @onclick="() => SelectColor(color)">
+        <button class="color-item @(isSelected ? "selected" : "")"                style="background-color:@GetColorCss(color)"
+                disabled="@isDisabled"                @onclick="() => SelectColor(color)">
         </button>
     }
 </div>
@@ -36,6 +36,7 @@
         if (DisabledColors?.Contains(color) == true)
             return;
 
+        await Sound.PlayButton();
         await OnColorSelected.InvokeAsync(color);
     }
 

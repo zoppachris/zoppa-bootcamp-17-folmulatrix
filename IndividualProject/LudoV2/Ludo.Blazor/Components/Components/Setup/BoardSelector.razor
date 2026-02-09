@@ -1,3 +1,5 @@
+@inject SoundService Sound
+
 <div class="board-selector">
     @foreach (BoardType board in AvailableBoards)
     {
@@ -23,6 +25,7 @@
 
     protected async Task SelectBoard(BoardType board)
     {
+        await Sound.PlayButton();
         SelectedBoard = board;
         await SelectedBoardChanged.InvokeAsync(board);
     }

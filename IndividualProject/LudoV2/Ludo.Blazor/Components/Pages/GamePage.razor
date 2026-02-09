@@ -10,6 +10,7 @@
 @using Ludo.Game.Utils.BoardGenerate
 @inject NavigationManager Nav
 @inject GameSessionService Session
+@inject SoundService Sound
 
 <div class="game-page">
     <main class="game-main">
@@ -18,6 +19,9 @@
             <BoardView Board="currentGame.Board" PiecesPostion="currentGame.PiecePositions"
                        ClickablePieces="clickablePieces" OnPieceClicked="OnPieceClicked" OnPieceHover="OnPieceHover"
                        OnPieceHoverOut="ClearPreview" PreviewTile="previewTile" />
+
+            <Toasts class="p-3" Messages="messages" AutoHide="true" Delay="3000" StackLength="3"
+                    Placement="ToastsPlacement.BottomCenter" />
         </section>
         <DiceIndicator DiceValue="lastDiceValue" CanRoll="canRollDice" IsRolling="isRolling" OnRoll="RollDice" />
     </main>
@@ -35,6 +39,21 @@
     public bool canRollDice { get; private set; } = true;
     public bool isRolling { get; private set; }
 
+    List<ToastMessage> messages = new List<ToastMessage>();
+
+    private void ShowMessage(ToastType toastType, string title, string message)
+    {
+        messages.Add(
+        new ToastMessage
+        {
+            Type = toastType,
+            Title = title,
+            Message = message,
+
+        }
+    );
+    }
+
     protected override void OnInitialized()
     {
         @* currentGame = new GameController(StandardBoard.GenerateBoard(), new Dice(6), new List<IPlayer>{new Player("player 1",
@@ -46,6 +65,15 @@ Color.Red), new Player("player 2", Color.Green)}); *@
         }
 
         currentGame = Session.Game!;
+        Sound.PlayStart();
+
+        ShowMessage(ToastType.Primary, "Player Turn", $"Turn for {currentPlayer.Name}");
+
+        currentGame.OnCaptured += async (attacker, victim) =>
+        {
+            await Sound.PlayKill();
+            ShowMessage(ToastType.Danger, "Piece Killed!", $"{attacker.Name} captured a {victim.Color} piece");
+        };
     }
 
     async Task RollDice()
@@ -53,6 +81,8 @@ Color.Red), new Player("player 2", Color.Green)}); *@
         isRolling = true;
         canRollDice = false;
         StateHasChanged();
+
+        await Sound.PlayDice();
 
         for (int i = 0; i < 10; i++)
         {
@@ -68,6 +98,11 @@ Color.Red), new Player("player 2", Color.Green)}); *@
         {
             EndTurn();
         }
+        else
+        {
+            await Sound.PlayCanMove();
+            ShowMessage(ToastType.Info, "Move Piece", $"{currentPlayer.Name} has {clickablePieces.Count} moveable pieces");
+        }
 
         isRolling = false;
         StateHasChanged();
@@ -77,6 +112,8 @@ Color.Red), new Player("player 2", Color.Green)}); *@
     {
         if (!clickablePieces.Contains(piece))
             return;
+
+        await Sound.PlayMove();
 
         clickablePieces.Clear();
 
@@ -93,6 +130,25 @@ Color.Red), new Player("player 2", Color.Green)}); *@
 
         ClearPreview();
         StateHasChanged();
+    }
+
+    async Task AfterMove(Piece piece)
+    {
+        if (currentGame.GetPieceTile(piece)?.Zone == Zone.Goal)
+        {
+            await Sound.PlayGoal();
+            ShowMessage(ToastType.Success, "Goal Reached", $"{currentPlayer.Name} piece reached goal!");
+        }
+
+        if (currentGame.IsTurnFinished())
+        {
+            EndTurn();
+        }
+        else
+        {
+            ShowMessage(ToastType.Info, "Bonus Turn", $"{currentPlayer.Name} gets another turn!");
+            canRollDice = true;
+        }
     }
 
     void OnPieceHover(Piece piece)
@@ -126,11 +182,16 @@ Color.Red), new Player("player 2", Color.Green)}); *@
             Session.GetWinner();
             Nav.NavigateTo("/winner");
         }
+        else
+        {
+            ClearPreview();
+            clickablePieces.Clear();
+            canRollDice = true;
+            currentGame.NextTurn();
 
-        ClearPreview();
-        clickablePieces.Clear();
-        canRollDice = true;
-        currentGame.NextTurn();
+            Sound.PlayTurn();
+            ShowMessage(ToastType.Primary, "Player Turn", $"Turn for {currentPlayer.Name}");
+        }
     }
 
     void MoveAllPieceToGoal()

@@ -1,16 +1,27 @@
 @page "/"
 @using Ludo.Blazor.Components.Components.Home
 @inject NavigationManager Nav
+@inject SoundService Sound
 
-<div class="page page-home page--center page--fullscreen">
-    <HomeHero />
-    <PlayButton OnClick="GoToSetup" />
+<div class="page page-home page--center page--fullscreen background-image"
+     style="background-image: url('images/ludo-board.jpg');">
+    <div class="card-home">
+        <HomeHero />
+        <PlayButton OnClick="GoToSetup" />
+    </div>
+    @* <img src="images/ludo-board.webp" alt="Ludo Board" class="background-image" /> *@
 </div>
 
 
 @code {
+    protected override void OnInitialized()
+    {
+        Sound.PlayHomeBgm();
+    }
+
     void GoToSetup()
     {
+        Sound.PlayButtonStart();
         Nav.NavigateTo("/setup");
     }
 }

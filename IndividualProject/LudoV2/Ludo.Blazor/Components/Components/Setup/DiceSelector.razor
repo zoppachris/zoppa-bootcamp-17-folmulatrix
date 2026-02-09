@@ -1,3 +1,5 @@
+@inject SoundService Sound
+
 <div class="dice-selector">
     @foreach (int dice in DiceOptions)
     {
@@ -19,6 +21,7 @@
 
     protected async Task SelectDice(int dice)
     {
+        await Sound.PlayButton();
         SelectedDice = dice;
         await SelectedDiceChanged.InvokeAsync(dice);
     }

@@ -7,6 +7,7 @@
 @using Ludo.Game.Utils.BoardGenerate
 @inject NavigationManager Nav
 @inject GameSessionService Session
+@inject SoundService Sound
 
 <div class="setup-page">
 
@@ -92,6 +93,7 @@
         if (!IsSetupValid)
             return;
 
+        Sound.PlayButtonStart();
         List<IPlayer> players = Players
                 .Select(p => (IPlayer)new Player(p.Name!, p.Color!.Value))
                 .ToList();

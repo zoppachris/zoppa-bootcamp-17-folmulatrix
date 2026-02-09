@@ -6,9 +6,11 @@
   font-size: 3rem;
   letter-spacing: 2px;
   margin-bottom: 8px;
+  font-weight: 600;
 }
 
 .tagline {
   font-size: 1rem;
+  font-weight: 500;
   opacity: 0.7;
 }

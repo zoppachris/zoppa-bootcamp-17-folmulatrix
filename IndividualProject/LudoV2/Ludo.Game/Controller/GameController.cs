@@ -40,11 +40,13 @@ namespace Ludo.Game.Controller
         }
         public IPlayer GetCurrentPlayer()
         {
-            return _players[_currentPlayerIndex];
+            IPlayer currentPlayer = _players[_currentPlayerIndex];
+            return currentPlayer;
         }
         public Tile? GetPieceTile(Piece piece)
         {
-            return _piecePositions.TryGetValue(piece, out Tile? tile) ? tile : null;
+            Tile? pieceTile = _piecePositions.TryGetValue(piece, out Tile? tile) ? tile : null;
+            return pieceTile;
         }
         public void StartGame()
         {
@@ -78,11 +80,13 @@ namespace Ludo.Game.Controller
         {
             _currentDiceValue = _random.Next(1, _dice.Sides + 1);
             _hasBonusTurn = _currentDiceValue == _dice.Sides;
+
             return _currentDiceValue;
         }
         public List<Piece> GetPieces(IPlayer player)
         {
-            return _pieceInHands[player];
+            List<Piece> playerPieces =  _pieceInHands[player];
+            return playerPieces;
         }
         public List<Piece> GetMoveablePieces(IPlayer player)
         {

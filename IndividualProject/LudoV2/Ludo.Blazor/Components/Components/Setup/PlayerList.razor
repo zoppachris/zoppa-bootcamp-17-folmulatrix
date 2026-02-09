@@ -1,4 +1,6 @@
 @using Ludo.Game.Enums
+@inject SoundService Sound
+
 <div class="player-list">
     @for (int i = 0; i < Players.Count; i++)
     {
@@ -46,6 +48,7 @@
         if (Players.Count >= 4)
             return;
 
+        await Sound.PlayAdd();
         Players.Add(new PlayerSetupModel());
         await PlayersChanged.InvokeAsync(Players);
     }
@@ -55,6 +58,7 @@
         if (Players.Count == 2)
             return;
 
+        await Sound.PlayDelete();
         Players.RemoveAt(Players.Count - 1);
         await PlayersChanged.InvokeAsync(Players);
     }

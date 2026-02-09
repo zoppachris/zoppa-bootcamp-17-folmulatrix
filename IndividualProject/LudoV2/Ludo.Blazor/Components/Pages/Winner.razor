@@ -2,13 +2,14 @@
 @using Ludo.Game.Interfaces
 @inject NavigationManager Nav
 @inject GameSessionService Session
+@inject SoundService Sound
 
 <section class="winner-page">
     @if (winner != null)
     {
         <div class="winner-card player-@winner.Color.ToString().ToLower()">
 
-            <img src="images/winner-logo.png" alt="Winner Logo" style="width: 200px;"/>
+            <img src="images/winner-logo.png" alt="Winner Logo" style="width: 200px;" />
 
             <h1 class="winner-title">We Have a Winner!</h1>
 
@@ -45,17 +46,20 @@
             return;
         }
 
+        Sound.PlayWinning();
         winner = Session.Winner;
     }
 
     void GoHome()
     {
+        Sound.PlayButtonStart();
         Session.GameOver();
         Nav.NavigateTo("/");
     }
 
     void PlayAgain()
     {
+        Sound.PlayButtonStart();
         Session.Reset();
         Nav.NavigateTo("/game");
     }

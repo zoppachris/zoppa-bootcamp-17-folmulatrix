@@ -9,9 +9,3 @@
   color: white;
   align-self: center;
 }
-
-@media (min-width: 768px) {
-  .play-button {
-    width: 30%;
-  }
-}
