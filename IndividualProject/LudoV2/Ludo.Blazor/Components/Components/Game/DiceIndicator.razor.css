@@ -1,7 +1,6 @@
 .dice-indicator {
   display: flex;
   justify-content: center;
-  margin-bottom: 1rem;
 }
 
 .dice-card {
@@ -10,7 +9,7 @@
   border-radius: 16px;
 
   background: #ffffff;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 3px 9px rgba(0, 0, 0, 0.1);
 
   display: flex;
   flex-direction: column;

@@ -13,20 +13,18 @@
 
 <div class="game-page">
     <main class="game-main">
-
+        <PlayerIndicator Player="currentPlayer" />
         <section class="board-section">
             <BoardView Board="currentGame.Board" PiecesPostion="currentGame.PiecePositions"
                        ClickablePieces="clickablePieces" OnPieceClicked="OnPieceClicked" OnPieceHover="OnPieceHover"
                        OnPieceHoverOut="ClearPreview" PreviewTile="previewTile" />
         </section>
+        <DiceIndicator DiceValue="lastDiceValue" CanRoll="canRollDice" IsRolling="isRolling" OnRoll="RollDice" />
     </main>
-    <PlayerIndicator Player="currentPlayer" />
-    <DiceIndicator DiceValue="lastDiceValue" CanRoll="canRollDice" IsRolling="isRolling" OnRoll="RollDice" />
     @* <button @onclick="MoveAllPieceToGoal">ended</button> *@
 </div>
 
 @code {
-    @* GameController CurrentGame => Session.Game!; *@
     GameController currentGame = null!;
     IPlayer currentPlayer => currentGame.GetCurrentPlayer();
     Random random = new Random();

@@ -106,7 +106,6 @@ body {
 .game-page {
   display: flex;
   flex-direction: column;
-  height: 100svh;
   background-color: #f5f6f8;
 }
 
@@ -115,16 +114,34 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-height: 100vh;
+}
+
+.board-section {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 1rem 0rem;
+}
+
+@media (min-width: 1024px) {
+  .board-section {
+    margin: 0rem 1rem;
+  }
+
+  .game-main {
+    flex-direction: row;
+  }
 }
 
 .player-indicator {
   display: flex;
   justify-content: center;
-  margin-bottom: 1rem;
 }
 
 .player-indicator-card {
-  min-width: 220px;
+  min-width: 140px;
   padding: 0.75rem 1.25rem;
   border-radius: 14px;
 
@@ -183,35 +200,6 @@ body {
 .player-green .player-color-dot,
 .player-yellow .player-color-dot {
   background-color: var(--player-color);
-}
-
-.board-section {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.board-placeholder {
-  width: min(92vw, 520px);
-  aspect-ratio: 1 / 1;
-  border-radius: 16px;
-  background-color: #e0e0e0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #777;
-  font-size: 0.9rem;
-}
-
-@media (min-width: 768px) {
-  .game-main {
-    flex-direction: row;
-  }
-
-  .board-section {
-    flex: 1;
-  }
 }
 
 .winner-page {
