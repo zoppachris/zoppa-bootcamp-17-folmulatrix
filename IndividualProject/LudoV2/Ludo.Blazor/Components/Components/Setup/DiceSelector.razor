@@ -1,5 +1,5 @@
 <div class="dice-selector">
-    @foreach (var dice in DiceOptions)
+    @foreach (int dice in DiceOptions)
     {
         <button class="dice-item @(dice == SelectedDice ? "selected" : "")"
                 @onclick="() => SelectDice(dice)">

@@ -1,9 +1,9 @@
 @using Ludo.Game.Enums
 <div class="color-picker">
-    @foreach (var color in AvailableColors)
+    @foreach (Color color in AvailableColors)
     {
-        var isSelected = SelectedColor == color;
-        var isDisabled = DisabledColors?.Contains(color) == true;
+        bool isSelected = SelectedColor == color;
+        bool isDisabled = DisabledColors?.Contains(color) == true;
 
         <button class="color-item @(isSelected ? "selected" : "")"
                 style="background-color:@GetColorCss(color)"

@@ -1,5 +1,6 @@
 @page "/setup"
 @using Ludo.Blazor.Components.Components.Setup
+@using Ludo.Game.Enums
 @using Ludo.Game.Interfaces
 @using Ludo.Game.Models.Dice
 @using Ludo.Game.Models.Player
@@ -74,7 +75,7 @@
             return false;
         }
 
-        var usedColors = Players
+        List<Color?>? usedColors = Players
             .Select(p => p.Color)
             .ToList();
 

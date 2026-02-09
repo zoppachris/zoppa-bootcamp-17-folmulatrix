@@ -12,7 +12,7 @@
     @if (Pieces.Any())
     {
         <div class="piece-stack">
-            @foreach (var piece in Pieces)
+            @foreach (Piece piece in Pieces)
             {
                 bool clickable = ClickablePieces.Contains(piece);
                 if (clickable)
@@ -64,7 +64,7 @@
     {
         get
         {
-            var classes = new List<string> { };
+            List<string>? classes = new List<string> { };
 
             classes.Add(Tile.Zone switch
             {
