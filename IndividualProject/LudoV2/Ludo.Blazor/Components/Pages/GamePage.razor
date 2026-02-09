@@ -56,8 +56,6 @@
 
     protected override void OnInitialized()
     {
-        @* currentGame = new GameController(StandardBoard.GenerateBoard(), new Dice(6), new List<IPlayer>{new Player("player 1",
-Color.Red), new Player("player 2", Color.Green)}); *@
         if (Session.Game == null)
         {
             Nav.NavigateTo("/", replace: true);

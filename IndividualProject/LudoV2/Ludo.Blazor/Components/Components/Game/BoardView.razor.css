@@ -51,8 +51,9 @@
   }
 }
 
-/* @media (min-width: 1024px) {
+@media (min-width: 1024px) {
   .board-grid {
-    width: 720px;
+    width: min(100%, 1440px);
+    height: auto;
   }
-} */
+}

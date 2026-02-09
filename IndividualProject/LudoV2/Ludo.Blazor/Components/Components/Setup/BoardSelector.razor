@@ -3,8 +3,7 @@
 <div class="board-selector">
     @foreach (BoardType board in AvailableBoards)
     {
-        <button class="board-item @(board == SelectedBoard ? "selected" : "")" disabled="@(board == BoardType.Big)"
-                @onclick="() => SelectBoard(board)">
+        <button class="board-item @(board == SelectedBoard ? "selected" : "")" @onclick="() => SelectBoard(board)">
             @board.ToString()
         </button>
     }
