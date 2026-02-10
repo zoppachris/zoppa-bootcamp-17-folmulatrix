@@ -12,5 +12,9 @@ namespace Ludo.Game.Models.Player
             Name = name;
             Color = color;
         }
+        public override string ToString()
+        {
+            return $"{Name} - {Color}";
+        }
     }
 }
