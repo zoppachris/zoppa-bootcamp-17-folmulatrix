@@ -53,7 +53,7 @@
 
 @media (min-width: 1024px) {
   .board-grid {
-    width: min(100%, 1440px);
+    width: min(100%, 60vw);
     height: auto;
   }
 }

@@ -4,7 +4,6 @@ using Ludo.Game.Controller;
 using Serilog;
 using Serilog.Events;
 using Serilog.Formatting.Compact;
-using Serilog.Sinks.File;
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Debug()
@@ -19,21 +18,47 @@ try
 
     var builder = WebApplication.CreateBuilder(args);
 
-    builder.Host.UseSerilog((context, services, configuration) => configuration
+    var solutionRoot = Directory.GetParent(
+        builder.Environment.ContentRootPath
+    )!.FullName;
+
+    var logRoot = Path.Combine(
+        solutionRoot,
+        "Logs",
+        "Ludo.Blazor"
+    );
+
+    builder.Host.UseSerilog((context, services, configuration) =>
+    {
+        configuration
         .ReadFrom.Configuration(context.Configuration)
-        .ReadFrom.Services(services)
         .Enrich.FromLogContext()
         .Enrich.WithEnvironmentName()
         .Enrich.WithMachineName()
-        .WriteTo.Console()
-        .WriteTo.File("logs/application-.log",
-            rollingInterval: RollingInterval.Day,
-            retainedFileCountLimit: 30,
-            shared: true,
-            flushToDiskInterval: TimeSpan.FromSeconds(1))
-        .WriteTo.File(new CompactJsonFormatter(), "logs/application-json-.log",
-            rollingInterval: RollingInterval.Day,
-            retainedFileCountLimit: 30));
+        .WriteTo.Console();
+
+        if (!context.HostingEnvironment.IsDevelopment())
+        {
+            configuration.ReadFrom.Services(services);
+        }
+    
+        configuration.WriteTo.Async(a =>
+        {
+            a.File(
+                Path.Combine(logRoot, "application-.log"),
+                rollingInterval: RollingInterval.Day,
+                retainedFileCountLimit: 30,
+                shared: true,
+                flushToDiskInterval: TimeSpan.FromSeconds(1));
+
+            a.File(
+                new CompactJsonFormatter(),
+                Path.Combine(logRoot, "logs/application-json-.log"),
+                rollingInterval: RollingInterval.Day,
+                retainedFileCountLimit: 30,
+                shared: true);
+        });
+    });
 
     builder.Services.AddRazorComponents()
         .AddInteractiveServerComponents();
@@ -70,4 +95,8 @@ catch (System.Exception)
 {
 
     throw;
+}
+finally
+{
+    Log.CloseAndFlush();
 }

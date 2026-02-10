@@ -87,7 +87,7 @@ body {
 
 @media (min-width: 768px) {
   .setup-page {
-    max-width: 480px;
+    min-width: 30%;
     margin: 0 auto;
   }
 }
