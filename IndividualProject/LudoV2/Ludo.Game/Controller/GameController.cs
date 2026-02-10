@@ -1,5 +1,6 @@
 using Ludo.Game.Enums;
 using Ludo.Game.Interfaces;
+using Ludo.Game.Logging;
 using Ludo.Game.Models.Board;
 using Ludo.Game.Models.Piece;
 
@@ -7,6 +8,8 @@ namespace Ludo.Game.Controller
 {
     public class GameController
     {
+        private readonly IGameLogger _logger;
+
         private readonly IBoard _board;
         private readonly IDice _dice;
         private readonly List<IPlayer> _players;
@@ -25,8 +28,9 @@ namespace Ludo.Game.Controller
         public Action<IPlayer, Piece>? OnCaptured;
         public Action<IPlayer>? OnGameEnded;
 
-        public GameController(IBoard board, IDice dice, List<IPlayer> players)
+        public GameController(IGameLogger logger, IBoard board, IDice dice, List<IPlayer> players)
         {
+            _logger = logger;
             _board = board;
             _dice = dice;
             _players = players;
@@ -37,15 +41,21 @@ namespace Ludo.Game.Controller
 
             InitializePlayers();
             InitializePieces();
+
+            _logger.Info("GameController created");
         }
         public IPlayer GetCurrentPlayer()
         {
             IPlayer currentPlayer = _players[_currentPlayerIndex];
+            _logger.Info($"Current Player: {currentPlayer.Name} ({currentPlayer.Color})");
             return currentPlayer;
         }
         public Tile? GetPieceTile(Piece piece)
         {
             Tile? pieceTile = _piecePositions.TryGetValue(piece, out Tile? tile) ? tile : null;
+
+            _logger.Info($"Piece {piece.Color} is at tile {pieceTile?.Position}");
+
             return pieceTile;
         }
         public void StartGame()
@@ -54,9 +64,12 @@ namespace Ludo.Game.Controller
             _currentDiceValue = 0;
             _hasBonusTurn = false;
             _winner = null;
+
+            _logger.Info("Game started");
         }
         public void ResetGame()
         {
+            _logger.Info("Game is being reset");
             foreach (IPlayer player in _players)
             {
                 int i = 0;
@@ -79,18 +92,41 @@ namespace Ludo.Game.Controller
         public int RollDice()
         {
             _currentDiceValue = _random.Next(1, _dice.Sides + 1);
-            _hasBonusTurn = _currentDiceValue == _dice.Sides;
+            GetBonusTurnIfNeeded();
 
+            _logger.Info($"Dice rolled: {_currentDiceValue}");
             return _currentDiceValue;
         }
         public List<Piece> GetPieces(IPlayer player)
         {
-            List<Piece> playerPieces =  _pieceInHands[player];
+            List<Piece> playerPieces = _pieceInHands[player];
+
+            _logger.Info($"Retrieved pieces for player {player.Name} :");
+            foreach (var piece in playerPieces)
+            {
+                GetPieceTile(piece);
+            }
+
             return playerPieces;
         }
         public List<Piece> GetMoveablePieces(IPlayer player)
         {
             List<Piece> result = _pieceInHands[player].FindAll(p => CanMovePiece(player, p));
+
+            _logger.Info($"Retrieved moveable pieces for player {player.Name} : {result.Count}");
+
+            if (result.Count > 0)
+            {
+                foreach (var piece in result)
+                {
+                    GetPieceTile(piece);
+                }
+            }
+            else
+            {
+                _logger.Info("No moveable pieces available.");
+            }
+
             return result;
         }
         public void MovePiece(IPlayer player, Piece piece)
@@ -116,19 +152,19 @@ namespace Ludo.Game.Controller
                 _stepsMoved[piece] = targetIndex + _currentDiceValue;
             }
 
+            _logger.Info($"Moving piece {piece.Color} to tile {targetTile.Position}");
+
             HandleCaptureIfAny(player, piece, targetTile);
 
             _piecePositions[piece] = targetTile;
 
-            if (targetTile.Zone == Zone.Goal)
-            {
-                _hasBonusTurn = true;
-            }
+            GetBonusTurnIfNeeded(targetTile);
 
             CheckGameEndInternal(player);
         }
         public bool IsTurnFinished()
         {
+            _logger.Info($"Checking if turn is finished: {!_hasBonusTurn}");
             return !_hasBonusTurn;
         }
         public void NextTurn()
@@ -136,9 +172,12 @@ namespace Ludo.Game.Controller
             _hasBonusTurn = false;
             _currentDiceValue = 0;
             _currentPlayerIndex = (_currentPlayerIndex + 1) % _players.Count;
+
+            _logger.Info($"Next turn: {_players[_currentPlayerIndex].Name}");
         }
         public bool IsGameOver()
         {
+            _logger.Info("Game over check: " + (_winner != null));
             return _winner != null;
         }
         public bool IsPlayerWin(IPlayer player)
@@ -150,8 +189,11 @@ namespace Ludo.Game.Controller
 
             if (allFinished)
             {
+                _logger.Info($"Player {player.Name} has won.");
                 return true;
             }
+
+            _logger.Info($"Player {player.Name} has not won yet.");
 
             return false;
         }
@@ -159,6 +201,7 @@ namespace Ludo.Game.Controller
         {
             if (_winner != null)
             {
+                _logger.Info($"Returning winner: {_winner.Name}");
                 return _winner;
             }
 
@@ -174,10 +217,14 @@ namespace Ludo.Game.Controller
                 }
             }
 
+            _logger.Info(winner != null
+                ? $"Winner found: {winner.Name}"
+                : "No winner yet.");
             return winner;
         }
         private void InitializePlayers()
         {
+            _logger.Info("Initializing players and their pieces.");
             foreach (IPlayer player in _players)
             {
                 _pieceInHands[player] = new List<Piece>();
@@ -185,6 +232,7 @@ namespace Ludo.Game.Controller
         }
         private void InitializePieces()
         {
+            _logger.Info("Initializing pieces on the board.");
             foreach (IPlayer player in _players)
             {
                 List<Tile> homeTiles = _board.Tiles
@@ -228,6 +276,8 @@ namespace Ludo.Game.Controller
                 if (_piecePositions[piece] != targetTile)
                     continue;
 
+                _logger.Info($"{attacker.Name} captured a {piece.Color} piece at tile {targetTile.Position}");
+
                 KillPiece(piece);
                 OnCaptured?.Invoke(attacker, piece);
             }
@@ -241,7 +291,9 @@ namespace Ludo.Game.Controller
             _stepsMoved[piece] = -1;
             _piecePositions[piece] = homeTile;
 
-            _hasBonusTurn = true;
+            _logger.Info($"Piece {piece.Color} sent back to Home.");
+            
+            GetBonusTurnIfNeeded(isKilling: true);
         }
         private void CheckGameEndInternal(IPlayer player)
         {
@@ -249,6 +301,28 @@ namespace Ludo.Game.Controller
             {
                 _winner = player;
                 OnGameEnded?.Invoke(player);
+            }
+        }
+        private void GetBonusTurnIfNeeded(Tile? targetTile = null, bool isKilling = false)
+        {
+            if (_currentDiceValue == _dice.Sides)
+            {
+                _hasBonusTurn = true;
+            }
+
+            if (targetTile != null && targetTile.Zone == Zone.Goal)
+            {
+                _hasBonusTurn = true;
+            }
+
+            if (isKilling)
+            {
+                _hasBonusTurn = true;
+            }
+
+            if (_hasBonusTurn)
+            {
+                _logger.Info($"{_players[_currentPlayerIndex]} gets a bonus turn.");
             }
         }
 

@@ -14,94 +14,92 @@ namespace Ludo.Game
     {
         static void Main()
         {
-            // ===== INIT =====
-            IBoard board = StandardBoard.GenerateBoard();
-            IDice dice = new Dice(6);
+            // IBoard board = StandardBoard.GenerateBoard();
+            // IDice dice = new Dice(6);
 
-            Console.WriteLine("Welcome to Ludo Game!!!");
+            // Console.WriteLine("Welcome to Ludo Game!!!");
 
-            Console.WriteLine();
+            // Console.WriteLine();
 
-            List<IPlayer> players = PlayerChoose();
+            // List<IPlayer> players = PlayerChoose();
 
-            Console.WriteLine("\nList of player :");
-            foreach (var player in players)
-            {
-                Console.WriteLine($"- {player.Name} - {player.Color}");
-            }
+            // Console.WriteLine("\nList of player :");
+            // foreach (var player in players)
+            // {
+            //     Console.WriteLine($"- {player.Name} - {player.Color}");
+            // }
 
-            Console.WriteLine("\nEnter any key to start the game...");
-            Console.ReadKey();
+            // Console.WriteLine("\nEnter any key to start the game...");
+            // Console.ReadKey();
 
-            GameController game = new GameController(board, dice, players);
+            // GameController game = new GameController(board, dice, players);
 
-            game.OnCaptured += (player, piece) =>
-            {
-                Console.WriteLine($"💥 {player.Name} captured a {piece.Color} piece!");
-            };
+            // game.OnCaptured += (player, piece) =>
+            // {
+            //     Console.WriteLine($"💥 {player.Name} captured a {piece.Color} piece!");
+            // };
 
-            game.OnGameEnded += winner =>
-            {
-                Console.WriteLine($"\n🏆 GAME OVER! Winner: {winner.Name}");
-            };
+            // game.OnGameEnded += winner =>
+            // {
+            //     Console.WriteLine($"\n🏆 GAME OVER! Winner: {winner.Name}");
+            // };
 
-            game.StartGame();
+            // game.StartGame();
 
-            // ===== GAME LOOP =====
-            while (!game.IsGameOver())
-            {
-                Console.Clear();
+            // while (!game.IsGameOver())
+            // {
+            //     Console.Clear();
 
-                IPlayer currentPlayer = game.GetCurrentPlayer();
-                Console.WriteLine($"🎮 Turn: {currentPlayer.Name} ({currentPlayer.Color})");
+            //     IPlayer currentPlayer = game.GetCurrentPlayer();
+            //     Console.WriteLine($"🎮 Turn: {currentPlayer.Name} ({currentPlayer.Color})");
 
-                Console.WriteLine("Press ENTER to roll dice...");
-                Console.ReadLine();
+            //     Console.WriteLine("Press ENTER to roll dice...");
+            //     Console.ReadLine();
 
-                int diceValue = game.RollDice();
-                Console.WriteLine($"🎲 Dice rolled: {diceValue}\n");
+            //     int diceValue = game.RollDice();
+            //     Console.WriteLine($"🎲 Dice rolled: {diceValue}\n");
 
-                List<Piece> moveablePieces = game.GetMoveablePieces(currentPlayer);
-                ConsoleRenderer.RenderBoard(board, game, moveablePieces.ToHashSet());
+            //     List<Piece> moveablePieces = game.GetMoveablePieces(currentPlayer);
+            //     ConsoleRenderer.RenderBoard(board, game, moveablePieces.ToHashSet());
 
-                if (moveablePieces.Count == 0)
-                {
-                    Console.WriteLine("❌ No moveable pieces.");
-                    Console.WriteLine("Press ENTER to continue...");
-                    Console.ReadLine();
-                    game.NextTurn();
-                    continue;
-                }
+            //     if (moveablePieces.Count == 0)
+            //     {
+            //         Console.WriteLine("❌ No moveable pieces.");
+            //         Console.WriteLine("Press ENTER to continue...");
+            //         Console.ReadLine();
+            //         game.NextTurn();
+            //         continue;
+            //     }
 
-                Console.WriteLine("\nChoose piece to move:");
-                for (int i = 0; i < moveablePieces.Count; i++)
-                {
-                    Piece piece = moveablePieces[i];
-                    Console.WriteLine($"{i + 1}. Piece at {game.GetPieceTile(piece)?.Position}");
-                }
+            //     Console.WriteLine("\nChoose piece to move:");
+            //     for (int i = 0; i < moveablePieces.Count; i++)
+            //     {
+            //         Piece piece = moveablePieces[i];
+            //         Console.WriteLine($"{i + 1}. Piece at {game.GetPieceTile(piece)?.Position}");
+            //     }
 
-                int choice = ReadChoice(1, moveablePieces.Count);
-                Piece selectedPiece = moveablePieces[choice - 1];
+            //     int choice = ReadChoice(1, moveablePieces.Count);
+            //     Piece selectedPiece = moveablePieces[choice - 1];
 
-                game.MovePiece(currentPlayer, selectedPiece);
+            //     game.MovePiece(currentPlayer, selectedPiece);
 
-                Console.WriteLine($"➡️ Moved piece to {game.GetPieceTile(selectedPiece)?.Position}");
+            //     Console.WriteLine($"➡️ Moved piece to {game.GetPieceTile(selectedPiece)?.Position}");
 
-                if (game.IsTurnFinished())
-                {
-                    Console.WriteLine("\nTurn finished. Press ENTER...");
-                    Console.ReadLine();
-                    game.NextTurn();
-                }
-                else
-                {
-                    Console.WriteLine("\n🎲 You get another turn!");
-                    Console.ReadLine();
-                }
-            }
+            //     if (game.IsTurnFinished())
+            //     {
+            //         Console.WriteLine("\nTurn finished. Press ENTER...");
+            //         Console.ReadLine();
+            //         game.NextTurn();
+            //     }
+            //     else
+            //     {
+            //         Console.WriteLine("\n🎲 You get another turn!");
+            //         Console.ReadLine();
+            //     }
+            // }
 
-            Console.WriteLine("\nPress ENTER to exit...");
-            Console.ReadLine();
+            // Console.WriteLine("\nPress ENTER to exit...");
+            // Console.ReadLine();
         }
 
         private static List<IPlayer> PlayerChoose()
