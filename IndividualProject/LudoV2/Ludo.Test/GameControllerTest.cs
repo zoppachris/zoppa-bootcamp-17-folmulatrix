@@ -17,6 +17,7 @@ public class GameControllerTest
     private GameController _game;
     private IPlayer _player1;
     private IPlayer _player2;
+    private Piece _piece1 = new Piece(Color.Red);
 
     [SetUp]
     public void Setup()
@@ -34,6 +35,25 @@ public class GameControllerTest
         _game.StartGame();
     }
 
+    [Test]
+    [TestCase(0)]
+    [TestCase(1)]
+    public void Board_ShouldHave_ColorPaths_ForEachPlayer(int playerIndex)
+    {
+        Color playerColor = _game.Players[playerIndex].Color;
+
+        Assert.That(_game.Board.ColorPaths[playerColor], Is.Not.Null);
+    }
+
+    [Test]
+    public void FAIL_StartGame_TurnIsFinish()
+    {
+        _game.StartGame();
+        bool isTurnFinished = _game.IsTurnFinished();
+
+        Assert.That(isTurnFinished, Is.False, "Player turn is not finish yet");
+    }
+
     [TestCase(0)]
     [TestCase(1)]
     public void CurrentTurn_GetCurrentPlayer_ShouldMatchIndex(int expectedIndex)
@@ -44,14 +64,13 @@ public class GameControllerTest
             $"Current player should be {_game.Players[expectedIndex].Name}");
     }
 
-
     [Test]
     public void GetPieces_Player_ShouldReturnFourPieces()
     {
         List<Piece> pieces = _game.GetPieces(_player1);
         Assert.That(pieces.Count, Is.EqualTo(4));
     }
-    
+
     [TestCase(0)]
     [TestCase(3)]
     [TestCase(5)]
@@ -71,6 +90,15 @@ public class GameControllerTest
 
         Assert.That(tile, Is.Not.Null);
         Assert.That(tile!.Zone, Is.EqualTo(Zone.Home));
+    }
+
+    [Test]
+    public void FAIL_GetPieceTile_NonExistingPiece()
+    {
+        Tile? tile = _game.GetPieceTile(_piece1);
+
+        Assert.That(tile, Is.Not.Null,
+            "Tile should be null for non-existing piece.");
     }
 
     [Test]
@@ -105,7 +133,6 @@ public class GameControllerTest
     public void MovePiece_WhenPieceCannotMove_ShouldThrowException()
     {
         Piece piece = _game.GetPieces(_player1)[0];
-
         Assert.Throws<InvalidOperationException>(() =>
             _game.MovePiece(_player1, piece)
         );
@@ -136,6 +163,14 @@ public class GameControllerTest
     }
 
     [Test]
+    public void IsPlayerWinner_ShouldReturnFalseAtStart()
+    {
+        bool isWinner = _game.IsPlayerWin(_player1);
+
+        Assert.That(isWinner, Is.False);
+    }
+
+    [Test]
     public void FAIL_GetWinner_Immediately_ShouldReturnPlayer()
     {
         IPlayer? winner = _game.GetWinner();
@@ -143,7 +178,6 @@ public class GameControllerTest
         Assert.That(winner, Is.Not.Null,
             "Winner already set from the beginning.");
     }
-
 
     [Test]
     public void GetWinner_WhenPlayerWins_ShouldReturnThatPlayer()
@@ -163,5 +197,27 @@ public class GameControllerTest
         _game.MoveAllPieceToGoal(_player1);
 
         Assert.That(endedPlayer, Is.EqualTo(_player1));
+    }
+
+    [Test]
+    [TestCase(0)]
+    [TestCase(1)]
+    public void PieceInGoal_ShouldReturnTrue(int playerIndex)
+    {
+        _game.MoveAllPieceToGoal(_player1);
+        IPlayer player = _game.Players[playerIndex];
+        Piece playerPiece = _game.GetPieces(player)[0];
+        Tile? pieceTile = _game.PiecePositions[playerPiece];
+
+        Assert.That(pieceTile?.Zone == Zone.Goal, Is.True, "Piece position is not in Goal Tile");
+    }
+
+    [Test]
+    public void ResetGame_Winner_ShouldReturnNull()
+    {
+        _game.ResetGame();
+
+        IPlayer? winner = _game.GetWinner();
+        Assert.That(winner, Is.Null);
     }
 }

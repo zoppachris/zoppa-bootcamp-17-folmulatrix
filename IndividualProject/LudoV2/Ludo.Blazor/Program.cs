@@ -24,8 +24,7 @@ try
 
     var logRoot = Path.Combine(
         solutionRoot,
-        "Logs",
-        "Ludo.Blazor"
+        "logs"
     );
 
     builder.Host.UseSerilog((context, services, configuration) =>
@@ -53,7 +52,7 @@ try
 
             a.File(
                 new CompactJsonFormatter(),
-                Path.Combine(logRoot, "logs/application-json-.log"),
+                Path.Combine(logRoot, "application-json-.log"),
                 rollingInterval: RollingInterval.Day,
                 retainedFileCountLimit: 30,
                 shared: true);
@@ -65,7 +64,6 @@ try
     builder.Services.AddScoped<SoundService>();
 
     builder.Services.AddScoped<GameSessionService>();
-    builder.Services.AddScoped<GameControllerFactory>();
     builder.Services.AddScoped<IGameLogger, SerilogGameLogger>();
 
     builder.Services.AddBlazorBootstrap();

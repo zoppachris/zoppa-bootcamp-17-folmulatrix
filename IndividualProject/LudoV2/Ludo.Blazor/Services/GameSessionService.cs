@@ -1,19 +1,20 @@
 
 using Ludo.Game.Controller;
 using Ludo.Game.Interfaces;
+using Ludo.Game.Logging;
 
 public sealed class GameSessionService
 {
-    private readonly GameControllerFactory _factory;
+    private readonly IGameLogger _logger;
     public GameController? Game { get; private set; }
     public IPlayer? Winner { get; private set; } = null;
-    public GameSessionService(GameControllerFactory factory)
+    public GameSessionService(IGameLogger logger)
     {
-        _factory = factory;
+        _logger = logger;
     }
     public void CreateGame(List<IPlayer> players, IBoard board, IDice dice)
     {
-        Game = _factory.Create(board, dice, players);
+        Game = new GameController(_logger, board, dice, players);
         Game.StartGame();
     }
     public void GetWinner()

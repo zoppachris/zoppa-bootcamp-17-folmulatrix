@@ -42,22 +42,9 @@ namespace Ludo.Game.Controller
             InitializePlayers();
             InitializePieces();
 
-            _logger.Info("GameController created");
+            _logger.Info($"Game created with {_players.Count} players");
         }
-        public IPlayer GetCurrentPlayer()
-        {
-            IPlayer currentPlayer = _players[_currentPlayerIndex];
-            _logger.Info($"Current Player: {currentPlayer.Name} ({currentPlayer.Color})");
-            return currentPlayer;
-        }
-        public Tile? GetPieceTile(Piece piece)
-        {
-            Tile? pieceTile = _piecePositions.TryGetValue(piece, out Tile? tile) ? tile : null;
 
-            _logger.Info($"Piece {piece.Color} is at tile {pieceTile?.Position}");
-
-            return pieceTile;
-        }
         public void StartGame()
         {
             _currentPlayerIndex = 0;
@@ -88,6 +75,20 @@ namespace Ludo.Game.Controller
             }
 
             StartGame();
+        }
+        public IPlayer GetCurrentPlayer()
+        {
+            IPlayer currentPlayer = _players[_currentPlayerIndex];
+            _logger.Info($"Current Player: {currentPlayer.Name} ({currentPlayer.Color})");
+            return currentPlayer;
+        }
+        public Tile? GetPieceTile(Piece piece)
+        {
+            Tile? pieceTile = _piecePositions.TryGetValue(piece, out Tile? tile) ? tile : null;
+
+            _logger.Info($"Piece {piece.Color} is at tile {pieceTile?.Position}");
+
+            return pieceTile;
         }
         public int RollDice()
         {
@@ -132,7 +133,10 @@ namespace Ludo.Game.Controller
         public void MovePiece(IPlayer player, Piece piece)
         {
             if (!CanMovePiece(player, piece))
+            {
+                _logger.Warning($"{player.Name} cannot move this {piece.Color} piece");
                 throw new InvalidOperationException("Piece cannot be moved.");
+            }
 
             List<Tile> path = _board.ColorPaths[piece.Color];
             Tile? currentTile = _piecePositions[piece];
@@ -292,7 +296,7 @@ namespace Ludo.Game.Controller
             _piecePositions[piece] = homeTile;
 
             _logger.Info($"Piece {piece.Color} sent back to Home.");
-            
+
             GetBonusTurnIfNeeded(isKilling: true);
         }
         private void CheckGameEndInternal(IPlayer player)
