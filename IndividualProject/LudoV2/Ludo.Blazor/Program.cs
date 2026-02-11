@@ -50,12 +50,12 @@ try
                 shared: true,
                 flushToDiskInterval: TimeSpan.FromSeconds(1));
 
-            a.File(
-                new CompactJsonFormatter(),
-                Path.Combine(logRoot, "application-json-.log"),
-                rollingInterval: RollingInterval.Day,
-                retainedFileCountLimit: 30,
-                shared: true);
+            // a.File(
+            //     new CompactJsonFormatter(),
+            //     Path.Combine(logRoot, "application-json-.log"),
+            //     rollingInterval: RollingInterval.Day,
+            //     retainedFileCountLimit: 30,
+            //     shared: true);
         });
     });
 

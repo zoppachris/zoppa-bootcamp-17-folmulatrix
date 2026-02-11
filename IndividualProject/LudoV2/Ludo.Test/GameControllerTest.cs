@@ -6,6 +6,7 @@ using Ludo.Game.Models.Board;
 using Ludo.Game.Models.Dice;
 using Ludo.Game.Models.Piece;
 using Ludo.Game.Models.Player;
+using Ludo.Game.Models.ValueObjects;
 using Ludo.Game.Utils.BoardGenerate;
 using Moq;
 
@@ -17,13 +18,14 @@ public class GameControllerTest
     private GameController _game;
     private IPlayer _player1;
     private IPlayer _player2;
-    private Piece _piece1 = new Piece(Color.Red);
+    private Piece _piece1;
 
     [SetUp]
     public void Setup()
     {
         _player1 = new Player("Player1", Color.Red);
         _player2 = new Player("Player2", Color.Yellow);
+        _piece1 = new Piece(Color.Red);
 
         _game = new GameController(
             new Mock<IGameLogger>().Object,
@@ -46,18 +48,24 @@ public class GameControllerTest
     }
 
     [Test]
-    public void FAIL_StartGame_TurnIsFinish()
+    public void StartGame_TurnIsFinish()
     {
         _game.StartGame();
         bool isTurnFinished = _game.IsTurnFinished();
 
-        Assert.That(isTurnFinished, Is.False, "Player turn is not finish yet");
+        Assert.That(isTurnFinished, Is.True, "Player turn is not finish yet");
     }
 
+    [Test]
     [TestCase(0)]
     [TestCase(1)]
     public void CurrentTurn_GetCurrentPlayer_ShouldMatchIndex(int expectedIndex)
     {
+        if (expectedIndex == 1)
+        {
+            _game.NextTurn();
+        }
+
         IPlayer current = _game.GetCurrentPlayer();
 
         Assert.That(current, Is.EqualTo(_game.Players[expectedIndex]),
@@ -71,15 +79,16 @@ public class GameControllerTest
         Assert.That(pieces.Count, Is.EqualTo(4));
     }
 
+    [Test]
     [TestCase(0)]
     [TestCase(3)]
     [TestCase(5)]
-    public void FAIL_GetPieces_Count_ShouldMatch(int expectedCount)
+    public void GetPieces_Count_ShouldNotMatch(int expectedCount)
     {
         List<Piece> pieces = _game.GetPieces(_player1);
 
-        Assert.That(pieces.Count, Is.EqualTo(expectedCount),
-            $"Player should have {expectedCount} piece");
+        Assert.That(pieces.Count != expectedCount, Is.True,
+            $"Player should not have {expectedCount} piece");
     }
 
     [Test]
@@ -93,11 +102,11 @@ public class GameControllerTest
     }
 
     [Test]
-    public void FAIL_GetPieceTile_NonExistingPiece()
+    public void GetPieceTile_NonExistingPiece()
     {
         Tile? tile = _game.GetPieceTile(_piece1);
 
-        Assert.That(tile, Is.Not.Null,
+        Assert.That(tile, Is.Null,
             "Tile should be null for non-existing piece.");
     }
 
@@ -118,15 +127,17 @@ public class GameControllerTest
     }
 
     [Test]
-    public void FAIL_MovePiece_FromHome_WithoutMaxDice_ShouldMove()
+    public void GetMoveablePieces_WhenDiceMax()
     {
-        Piece piece = _game.GetPieces(_player1)[0];
+        int diceValue = 0;
 
-        _game.RollDice();
+        while (diceValue != _game.Dice.Sides)
+        {
+            diceValue = _game.RollDice();
+        }
+        List<Piece> pieces = _game.GetMoveablePieces(_player1);
 
-        _game.MovePiece(_player1, piece);
-
-        Assert.Pass("Piece success moved to Home");
+        Assert.That(pieces.Count, Is.GreaterThan(0));
     }
 
     [Test]
@@ -139,12 +150,21 @@ public class GameControllerTest
     }
 
     [Test]
-    public void IsTurnFinished_WithoutBonusTurn_ShouldReturnTrue()
+    public void MovePiece_FromHome_ToStart_WhenDiceMax()
     {
-        _game.RollDice();
-        bool finished = _game.IsTurnFinished();
+        int diceValue = 0;
 
-        Assert.That(finished, Is.True);
+        while (diceValue != _game.Dice.Sides)
+        {
+            diceValue = _game.RollDice();
+        }
+        List<Piece> pieces = _game.GetMoveablePieces(_player1);
+
+        _game.MovePiece(_player1, pieces[0]);
+
+        Tile? pieceTile = _game.PiecePositions[pieces[0]];
+
+        Assert.That(pieceTile?.Zone == Zone.Start, Is.True);
     }
 
     [Test]
@@ -171,12 +191,12 @@ public class GameControllerTest
     }
 
     [Test]
-    public void FAIL_GetWinner_Immediately_ShouldReturnPlayer()
+    public void GetWinner_Immediately_ShouldNotReturnPlayer()
     {
         IPlayer? winner = _game.GetWinner();
 
-        Assert.That(winner, Is.Not.Null,
-            "Winner already set from the beginning.");
+        Assert.That(winner, Is.Null,
+            "Winner not set from the beginning.");
     }
 
     [Test]
@@ -200,13 +220,10 @@ public class GameControllerTest
     }
 
     [Test]
-    [TestCase(0)]
-    [TestCase(1)]
-    public void PieceInGoal_ShouldReturnTrue(int playerIndex)
+    public void PieceInGoal_ShouldReturnTrue()
     {
         _game.MoveAllPieceToGoal(_player1);
-        IPlayer player = _game.Players[playerIndex];
-        Piece playerPiece = _game.GetPieces(player)[0];
+        Piece playerPiece = _game.GetPieces(_player1)[0];
         Tile? pieceTile = _game.PiecePositions[playerPiece];
 
         Assert.That(pieceTile?.Zone == Zone.Goal, Is.True, "Piece position is not in Goal Tile");
@@ -219,5 +236,32 @@ public class GameControllerTest
 
         IPlayer? winner = _game.GetWinner();
         Assert.That(winner, Is.Null);
+    }
+
+    [Test]
+    public void IsPositionEqual_WithDifferentInstance_ButSameValue()
+    {
+        Position position1 = new(1, 1);
+        Position position2 = new(1, 1);
+
+        Assert.That(position1 == position2, Is.True, $"{position1} is equal to {position2}");
+    }
+
+    [Test]
+    public void IsPositionNotEqual_WithDifferentInstance_DifferentValue()
+    {
+        Position position1 = new(1, 1);
+        Position position2 = new(1, 2);
+
+        Assert.That(position1 != position2, Is.True, $"{position1} is not equal to {position2}");
+    }
+
+    [Test]
+    public void IsPositionHashcodeEqual_WithDifferentInstance_ButSameValue()
+    {
+        Position position1 = new(1, 1);
+        Position position2 = new(1, 1);
+
+        Assert.That(position1.GetHashCode() == position2.GetHashCode(), Is.True, $"{position1} hashcode is equal to {position2}");
     }
 }

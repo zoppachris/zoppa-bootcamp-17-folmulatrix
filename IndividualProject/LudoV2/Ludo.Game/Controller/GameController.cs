@@ -134,7 +134,7 @@ namespace Ludo.Game.Controller
         {
             if (!CanMovePiece(player, piece))
             {
-                _logger.Warning($"{player.Name} cannot move this {piece.Color} piece");
+                _logger.Error(new InvalidOperationException("Piece cannot be moved."), $"{player.Name} cannot move this {piece.Color} piece");
                 throw new InvalidOperationException("Piece cannot be moved.");
             }
 
