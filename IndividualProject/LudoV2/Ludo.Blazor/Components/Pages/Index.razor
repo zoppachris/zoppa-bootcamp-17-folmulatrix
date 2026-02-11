@@ -3,19 +3,34 @@
 @inject NavigationManager Nav
 @inject SoundService Sound
 
-<div class="page page-home page--center page--fullscreen background-image"
-     style="background-image: url('images/ludo-board.jpg');">
-    <div class="card-home">
-        <HomeHero />
-        <PlayButton OnClick="GoToSetup" />
+
+@if (!audioReady)
+{
+    <div class="audio-overlay" @onclick="EnableAudio">
+        Tap anywhere to start
     </div>
-</div>
+}
+else
+{
+    <div class="page page-home page--center page--fullscreen background-image"
+         style="background-image: url('images/ludo-board.jpg');">
+        <div class="card-home">
+            <HomeHero />
+            <PlayButton OnClick="GoToSetup" />
+        </div>
+    </div>
+}
 
 
 @code {
-    protected override void OnInitialized()
+    bool audioReady;
+
+    async Task EnableAudio()
     {
-        Sound.PlayHomeBgm();
+        audioReady = true;
+
+        await Sound.Unlock();
+        await Sound.PlayHomeBgm();
     }
 
     void GoToSetup()

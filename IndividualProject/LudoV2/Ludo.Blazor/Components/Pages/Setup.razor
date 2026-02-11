@@ -112,6 +112,7 @@
                 break;
         }
 
+        Sound.StopHomeBgm();
         Session.CreateGame(players, board, dice);
         Nav.NavigateTo("/game");
     }

@@ -309,10 +309,7 @@ namespace Ludo.Game.Controller
         }
         private void GetBonusTurnIfNeeded(Tile? targetTile = null, bool isKilling = false)
         {
-            if (_currentDiceValue == _dice.Sides)
-            {
-                _hasBonusTurn = true;
-            }
+            _hasBonusTurn = _currentDiceValue == _dice.Sides;
 
             if (targetTile != null && targetTile.Zone == Zone.Goal)
             {

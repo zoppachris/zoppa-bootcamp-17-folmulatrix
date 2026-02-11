@@ -1,5 +1,16 @@
 @inherits LayoutComponentBase
+@inject SoundService Sound
 
 <div class="app-root">
     @Body
 </div>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Sound.InitializeAsync();
+        }
+    }
+}
