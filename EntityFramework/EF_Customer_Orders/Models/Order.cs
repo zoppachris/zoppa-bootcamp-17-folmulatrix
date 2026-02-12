@@ -34,7 +34,7 @@ namespace EF_Customer_Orders.Models
         public string OrdDescription { get; set; } = string.Empty;
 
         // Navigation
-        public Customer Customer { get; set; } = new();
-        public Agent Agent { get; set; } = new();
+        public virtual Customer Customer { get; set; } = null!;
+        public virtual Agent Agent { get; set; } = null!;
     }
 }

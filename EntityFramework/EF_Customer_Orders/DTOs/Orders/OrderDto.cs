@@ -9,7 +9,6 @@ namespace EF_Customer_Orders.DTOs.Orders
         public DateTime? OrdDate { get; set; }
 
         public string CustomerName { get; set; } = null!;
-
         public string AgentName { get; set; } = null!;
     }
 }

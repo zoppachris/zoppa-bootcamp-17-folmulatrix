@@ -5,9 +5,6 @@ namespace EF_Customer_Orders.DTOs.Customers
     public class UpdateCustomerDto
     {
         [Required]
-        public Guid Id { get; set; }
-
-        [Required]
         [StringLength(40)]
         public string CustName { get; set; } = null!;
 

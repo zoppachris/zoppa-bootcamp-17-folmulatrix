@@ -6,10 +6,8 @@ namespace EF_Customer_Orders.Services.Interfaces
     {
         Task<List<AgentDto>> GetAllAsync();
         Task<AgentDto?> GetByIdAsync(Guid id);
-
         Task<AgentDto> CreateAsync(CreateAgentDto dto);
-        Task<AgentDto> UpdateAsync(UpdateAgentDto dto);
-
-        Task<bool> DeleteAsync(Guid id);
+        Task<AgentDto> UpdateAsync(Guid id, UpdateAgentDto dto);
+        Task DeleteAsync(Guid id);
     }
 }

@@ -1,4 +1,4 @@
-using EF_Customer_Orders.DTOs.Agents;
+using EF_Customer_Orders.DTOs.Customers;
 using EF_Customer_Orders.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -6,54 +6,54 @@ namespace EF_Customer_Orders.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class AgentsController : ControllerBase
+    public class CustomersController : ControllerBase
     {
-        private readonly IAgentService _agentService;
+        private ICustomerService _customerService;
 
-        public AgentsController(IAgentService agentService)
+        public CustomersController(ICustomerService customerService)
         {
-            _agentService = agentService;
+            _customerService = customerService;
         }
 
-        // GET: api/agents
+        // GET: api/customers
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<List<AgentDto>>> GetAll()
+        public async Task<ActionResult<List<CustomerDto>>> GetAll()
         {
-            List<AgentDto> agents = await _agentService.GetAllAsync();
-            return Ok(agents);
+            List<CustomerDto> customers = await _customerService.GetAllAsync();
+            return Ok(customers);
         }
 
-        // GET: api/agents/{id}
+        // GET: api/customers/{id}
         [HttpGet("{id:guid}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<AgentDto>> GetById(Guid id)
+        public async Task<ActionResult<CustomerDto>> GetById(Guid id)
         {
-            AgentDto? agent = await _agentService.GetByIdAsync(id);
+            CustomerDto? customer = await _customerService.GetByIdAsync(id);
 
-            if (agent == null)
+            if (customer == null)
                 return NotFound();
 
-            return Ok(agent);
+            return Ok(customer);
         }
 
-        // POST: api/agents
+        // POST: api/customers
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
-        public async Task<ActionResult<AgentDto>> Create(
-        [FromBody] CreateAgentDto dto)
+        public async Task<ActionResult<CustomerDto>> Create(
+        [FromBody] CreateCustomerDto dto)
         {
             try
             {
-                AgentDto createdAgent = await _agentService.CreateAsync(dto);
+                CustomerDto createdCustomer = await _customerService.CreateAsync(dto);
 
                 return CreatedAtAction(
                     nameof(GetById),
-                    new { id = createdAgent.Id },
-                    createdAgent);
+                    new { id = createdCustomer.Id },
+                    createdCustomer);
             }
             catch (InvalidOperationException ex)
             {
@@ -61,19 +61,19 @@ namespace EF_Customer_Orders.Controllers
             }
         }
 
-        // PUT: api/agents/{id}
+        // PUT: api/customers/{id}
         [HttpPut("{id:guid}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<AgentDto>> Update(
+        public async Task<ActionResult<CustomerDto>> Update(
         Guid id,
-        [FromBody] UpdateAgentDto dto)
+        [FromBody] UpdateCustomerDto dto)
         {
             try
             {
-                AgentDto updatedAgent = await _agentService.UpdateAsync(id, dto);
-                return Ok(updatedAgent);
+                CustomerDto updatedCustomer = await _customerService.UpdateAsync(id, dto);
+                return Ok(updatedCustomer);
             }
             catch (KeyNotFoundException ex)
             {
@@ -81,7 +81,7 @@ namespace EF_Customer_Orders.Controllers
             }
         }
 
-        // DELETE: api/agents/{id}
+        // DELETE: api/customers/{id}
         [HttpDelete("{id:guid}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -90,9 +90,9 @@ namespace EF_Customer_Orders.Controllers
         {
             try
             {
-                await _agentService.DeleteAsync(id);
+                await _customerService.DeleteAsync(id);
 
-                return Ok(new { message = "Agent successfully deleted." });
+                return Ok(new { message = "Customer successfully deleted." });
             }
             catch (KeyNotFoundException ex)
             {

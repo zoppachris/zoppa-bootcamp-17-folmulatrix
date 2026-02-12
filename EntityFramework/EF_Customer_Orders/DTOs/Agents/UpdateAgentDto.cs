@@ -5,9 +5,6 @@ namespace EF_Customer_Orders.DTOs.Agents
     public class UpdateAgentDto
     {
         [Required]
-        public Guid Id { get; set; }
-
-        [Required]
         [StringLength(40)]
         public string AgentName { get; set; } = null!;
 

@@ -54,10 +54,10 @@ namespace EF_Customer_Orders.Services
 
             return _mapper.Map<AgentDto>(agent);
         }
-        public async Task<AgentDto> UpdateAsync(UpdateAgentDto dto)
+        public async Task<AgentDto> UpdateAsync(Guid id, UpdateAgentDto dto)
         {
             Agent? agent = await _context.Agents
-                .FirstOrDefaultAsync(a => a.Id == dto.Id);
+                .FirstOrDefaultAsync(a => a.Id == id);
 
             if (agent == null)
                 throw new KeyNotFoundException("Agent not found.");
@@ -68,7 +68,7 @@ namespace EF_Customer_Orders.Services
 
             return _mapper.Map<AgentDto>(agent);
         }
-        public async Task<bool> DeleteAsync(Guid id)
+        public async Task DeleteAsync(Guid id)
         {
             Agent? agent = await _context.Agents
                 .Include(a => a.Customers)
@@ -76,7 +76,7 @@ namespace EF_Customer_Orders.Services
                 .FirstOrDefaultAsync(a => a.Id == id);
 
             if (agent == null)
-                return false;
+                throw new KeyNotFoundException("Agent not found.");
 
             bool hasCustomer = await _context.Customers.AnyAsync(c => c.AgentId == id);
 
@@ -84,13 +84,10 @@ namespace EF_Customer_Orders.Services
                 .AnyAsync(o => o.AgentId == id);
 
             if (hasCustomer || hasOrder)
-                throw new InvalidOperationException(
-                    "Cannot delete agent because it is still referenced by customers or orders.");
+                throw new InvalidOperationException("Cannot delete agent because it is still referenced by customers or orders.");
 
             _context.Agents.Remove(agent);
             await _context.SaveChangesAsync();
-
-            return true;
         }
     }
 }

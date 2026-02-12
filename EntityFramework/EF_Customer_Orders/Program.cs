@@ -25,6 +25,8 @@ builder.Services.AddAutoMapper(cfg =>
 });
 
 builder.Services.AddScoped<IAgentService, AgentService>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
