@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace EF_Customer_Orders.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/agent")]
     public class AgentsController : ControllerBase
     {
         private readonly IAgentService _agentService;
