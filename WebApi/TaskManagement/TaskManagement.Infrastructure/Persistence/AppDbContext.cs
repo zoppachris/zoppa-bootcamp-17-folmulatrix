@@ -27,6 +27,12 @@ namespace TaskManagement.Infrastructure.Persistence
 
                 entity.Property(u => u.UpdatedAt)
                     .IsRequired(false);
+
+                entity.Property(u => u.RefreshToken)
+                    .IsRequired(false);
+
+                entity.Property(u => u.RefreshTokenExpiry)
+                    .IsRequired(false);
             });
 
             modelBuilder.Entity<Project>(entity =>
@@ -58,7 +64,7 @@ namespace TaskManagement.Infrastructure.Persistence
                 entity.HasMany(p => p.Tasks)
                     .WithOne(t => t.Project)
                     .HasForeignKey(t => t.ProjectId)
-                    .OnDelete(DeleteBehavior.Cascade); 
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<TaskItem>(entity =>
