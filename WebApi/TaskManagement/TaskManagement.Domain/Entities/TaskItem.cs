@@ -2,17 +2,18 @@ using TaskManagement.Domain.Enums;
 
 namespace TaskManagement.Domain.Entities
 {
-    public class TaskItem : BaseEntity
+    public class TaskItem
     {
+        public Guid Id { get; set; }
         public string Title { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-        public TaskItemStatus Status { get; set; } = TaskItemStatus.Backlog;
-        public TaskItemPriority Priority { get; set; } = TaskItemPriority.Medium;
-        public DateTime? DueDate { get; set; }
-        public Guid? AssignedToId { get; set; }
+        public string? Description { get; set; }
+        public TaskItemStatus Status { get; set; }
+        public TaskItemPriority Priority { get; set; }
+        public DateTime DueDate { get; set; }
+        public DateTime CreatedAt { get; set; }
         public Guid ProjectId { get; set; }
-
-        public virtual User? AssignedTo { get; set; }
-        public virtual Project Project { get; set; } = null!;
+        public Project Project { get; set; } = null!;
+        public Guid? AssignedUserId { get; set; }
+        public AppUser? AssignedUser { get; set; }
     }
 }

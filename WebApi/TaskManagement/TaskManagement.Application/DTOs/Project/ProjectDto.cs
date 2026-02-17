@@ -1,17 +1,15 @@
-using TaskManagement.Application.DTOs.Account;
 using TaskManagement.Application.DTOs.Task;
-
 namespace TaskManagement.Application.DTOs.Project
 {
     public class ProjectDto
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-        public Guid? OwnerId { get; set; }
-        public IEnumerable<UserDto> Members { get; set; } = new List<UserDto>();
-        public IEnumerable<TaskDto> Tasks { get; set; } = new List<TaskDto>();
+        public string? Description { get; set; }
         public DateTime CreatedAt { get; set; }
-        public DateTime? UpdatedAt { get; set; }
+        public string OwnerId { get; set; } = string.Empty;
+        public string OwnerName { get; set; } = string.Empty; // from user
+        public List<ProjectMemberDto> Members { get; set; } = new();
+        public List<TaskItemDto>? Tasks { get; set; } // optional
     }
 }

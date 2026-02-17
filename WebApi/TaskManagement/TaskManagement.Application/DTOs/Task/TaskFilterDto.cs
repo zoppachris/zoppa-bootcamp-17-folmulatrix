@@ -1,14 +1,15 @@
+using TaskManagement.Application.DTOs.Common;
 using TaskManagement.Domain.Enums;
 
 namespace TaskManagement.Application.DTOs.Task
 {
-    public class TaskFilterDto
+    public class TaskFilterDto : FilterDto
     {
         public TaskItemStatus? Status { get; set; }
+        public TaskItemPriority? Priority { get; set; }
         public Guid? ProjectId { get; set; }
         public Guid? AssignedUserId { get; set; }
-        public DateTime? DueDate { get; set; }
-        public int PageIndex { get; set; } = 1;
-        public int PageSize { get; set; } = 10;
+        public DateTime? DueDateFrom { get; set; }
+        public DateTime? DueDateTo { get; set; }
     }
 }

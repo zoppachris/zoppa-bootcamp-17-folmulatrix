@@ -1,60 +1,66 @@
-using System.Text;
-using AutoMapper;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi;
 using Microsoft.OpenApi.Models;
-using TaskManagement.Application.Interfaces.Repositories;
-using TaskManagement.Application.Interfaces.Services;
-using TaskManagement.Application.MappingProfiles;
+using System.Text;
+using TaskManagement.Api.Middleware;
+using TaskManagement.Application.Interfaces;
+using TaskManagement.Application.Mappings;
 using TaskManagement.Application.Services;
-using TaskManagement.Domain.Entities;
-using TaskManagement.Infrastructure.Persistence;
-using TaskManagement.Infrastructure.Persistence.Repositories;
-using TaskManagement.Infrastructure.Services;
+using TaskManagement.Infrastructure;
+using TaskManagement.Infrastructure.Data;
+using TaskManagement.Infrastructure.Settings;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+// Add services to the container.
+builder.Services.AddControllers();
+builder.Services.AddRouting(options => options.LowercaseUrls = true);
+builder.Services.AddFluentValidationAutoValidation();
 
-builder.Services.AddIdentity<User, IdentityRole<Guid>>()
-    .AddEntityFrameworkStores<AppDbContext>()
-    .AddDefaultTokenProviders();
+// Swagger
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "TaskManagement API", Version = "v1" });
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        In = ParameterLocation.Header,
+        Description = "Please enter JWT with Bearer into field",
+        Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
+            },
+            new List<string>()
+        }
+    });
+});
 
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
-builder.Services.AddScoped<ITaskRepository, TaskRepository>();
+// Infrastructure
+builder.Services.AddInfrastructure(builder.Configuration);
 
-builder.Services.AddScoped<UserManager<User>>();
-builder.Services.AddScoped<RoleManager<IdentityRole<Guid>>>();
-
-builder.Services.AddScoped<ITokenService, TokenService>();
-
-builder.Services.AddScoped<SignInManager<User>>();
-
-builder.Services.AddScoped<IAccountService, AccountService>();
+// Application services
+builder.Services.AddAutoMapper(cfg => cfg.AddMaps(typeof(MappingProfile).Assembly));
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
 
-var nullLoggerFactory = NullLoggerFactory.Instance;
-var mapperConfig = new MapperConfiguration(cfg =>
+// Authentication JWT
+var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>();
+builder.Services.AddAuthentication(options =>
 {
-    cfg.AddProfile<AccountMappingProfile>();
-    cfg.AddProfile<ProjectMappingProfile>();
-    cfg.AddProfile<TaskMappingProfile>();
-}, nullLoggerFactory);
-
-IMapper mapper = mapperConfig.CreateMapper();
-builder.Services.AddSingleton(mapper);
-
-var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("Jwt:Key not found");
-var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? throw new InvalidOperationException("Jwt:Issuer not found");
-
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
 .AddJwtBearer(options =>
 {
     options.TokenValidationParameters = new TokenValidationParameters
@@ -63,77 +69,32 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtIssuer,
-        ValidAudience = jwtIssuer,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+        ValidIssuer = jwtSettings!.Issuer,
+        ValidAudience = jwtSettings.Audience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret))
     };
-});
-
-builder.Services.AddAuthorization();
-builder.Services.AddControllers();
-
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "TaskManagement API", Version = "v1" });
-
-    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-    c.IncludeXmlComments(xmlPath);
-
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Description = "Please enter JWT with Bearer into field (e.g., 'Bearer {token}')",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
-    });
-
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                },
-                Scheme = "oauth2",
-                Name = "Bearer",
-                In = ParameterLocation.Header
-            },
-            new List<string>()
-        }
-    });
 });
 
 var app = builder.Build();
 
+// Seed database
+using (var scope = app.Services.CreateScope())
+{
+    await DataSeeder.SeedRolesAndAdminAsync(scope.ServiceProvider);
+}
+
+// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    using (var scope = app.Services.CreateScope())
-    {
-        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
-        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
-        await DbInitializer.InitializeAsync(context, userManager, roleManager);
-    }
-
     app.UseSwagger();
-    app.UseSwaggerUI(options =>
+    app.UseSwaggerUI(c =>
     {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "TaskManagement API v1");
-        options.RoutePrefix = "swagger";
-    });
-
-    app.MapGet("/", context =>
-    {
-        context.Response.Redirect("/swagger");
-        return Task.CompletedTask;
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Todo List API v1");
+        c.RoutePrefix = string.Empty; // Makes Swagger UI available at root
     });
 }
+
+app.UseMiddleware<ErrorHandlingMiddleware>();
 
 app.UseHttpsRedirection();
 

@@ -1,215 +1,590 @@
-API Usage Guide for TaskManagement
-This document provides a comprehensive guide on how to use the TaskManagement API. The API is built using ASP.NET 9.0, with features including user authentication (JWT), project management, task CRUD operations, pagination, and filtering. It follows a clean architecture with the following folder structure:
+# Todo Web API - Usage Guide
 
-TaskManagement.Api: Handles API controllers, endpoints, and Swagger configuration.
-TaskManagement.Application: Contains services, DTOs, AutoMapper profiles (using the latest AutoMapper directly, without Microsoft.Extensions.DependencyInjection), and ServiceResult<> pattern for handling responses.
-TaskManagement.Domain: Defines entities, enums (e.g., TaskStatus, TaskPriority), and domain logic.
-TaskManagement.Infrastructure: Includes repositories (Repository Pattern), Entity Framework Core with Sqlite database and FluentAPI for configuration, and JWT + Identity setup.
+## API Information
 
-The API uses Swagger for interactive documentation. Access it at /swagger when the API is running.
-Authentication
-All endpoints (except registration and login) require JWT authentication. Use the Authorization header with Bearer {token}.
+- **Base URL**: `http://localhost:5079`
+- **Swagger UI**: `http://localhost:5079/swagger`
+- **Database**: SQLite (`taskmanagement.db`)
+- **Authentication**: JWT Bearer Token
 
-1. Register
+## Default Test Accounts
 
-Endpoint: POST /api/account/register
-Description: Registers a new user.
-Request Body (JSON):JSON{
-"username": "string",
-"email": "string",
-"password": "string",
-"role": "Admin" or "User" // Optional, defaults to "User"
+### Admin Account
+
+- **Email**: `admin@example.com`
+- **Password**: `Admin@123`
+- **Role**: Admin
+
+## API Endpoints
+
+### Authentication
+
+#### 1. Register New User
+
+```http
+POST /api/auth/register
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "Password123!",
+  "userName": "johndoe",
+  "fullName": "John Doe"
 }
-Response:
-201 Created: User registered successfully (ServiceResult with success message).
-400 Bad Request: Validation errors (e.g., duplicate email).
+```
 
-2. Login
+**Response:**
 
-Endpoint: POST /api/account/login
-Description: Authenticates a user and returns JWT token.
-Request Body (JSON):JSON{
-"email": "string",
-"password": "string"
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIs...",
+    "refreshToken": "a1b2c3d4...",
+    "expiration": "2025-03-17T12:00:00Z"
+  }
 }
-Response:
-200 OK:JSON{
-"token": "string", // JWT access token
-"refreshToken": "string",
-"expiresIn": "int" // In minutes
+```
+
+#### 2. Login
+
+```http
+POST /api/auth/login
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "Password123!"
 }
-401 Unauthorized: Invalid credentials.
+```
 
-3. Refresh Token
+**Response:**
 
-Endpoint: POST /api/account/refresh-token
-Description: Refreshes the JWT using a refresh token.
-Request Body (JSON):JSON{
-"refreshToken": "string"
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIs...",
+    "refreshToken": "a1b2c3d4...",
+    "expiration": "2025-03-17T12:00:00Z"
+  }
 }
-Response:
-200 OK: New JWT and refresh token.
-401 Unauthorized: Invalid refresh token.
+```
 
-Projects
-Projects can be managed by authenticated users. Admins have full access; Users can only manage projects they own or are assigned to.
+#### 3. Refresh Token
 
-1. Create Project
+```http
+POST /api/auth/refresh-token
+Content-Type: application/json
 
-Endpoint: POST /api/projects
-Description: Creates a new project.
-Request Body (JSON):JSON{
-"name": "string",
-"description": "string"
+{
+  "refreshToken": "a1b2c3d4..."
 }
-Response:
-201 Created: Project created (returns Project DTO).
-400 Bad Request: Validation errors.
+```
 
-2. Update Project
+**Response:**
 
-Endpoint: PUT /api/projects/{id}
-Description: Updates an existing project.
-Path Parameter: id (int) - Project ID.
-Request Body (JSON):JSON{
-"name": "string",
-"description": "string"
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIs...",
+    "refreshToken": "new_refresh_token",
+    "expiration": "2025-03-17T12:00:00Z"
+  }
 }
-Response:
-200 OK: Project updated.
-404 Not Found: Project not found.
-403 Forbidden: Unauthorized to update.
+```
 
-3. Delete Project
+### User Management
 
-Endpoint: DELETE /api/projects/{id}
-Description: Deletes a project.
-Path Parameter: id (int) - Project ID.
-Response:
-204 No Content: Project deleted.
-404 Not Found: Project not found.
-403 Forbidden: Unauthorized.
+#### 1. Get Current User Profile
 
-4. Assign Member to Project
+```http
+Get /api/users/me
+Authorization: Bearer YOUR_JWT_TOKEN
+```
 
-Endpoint: POST /api/projects/{id}/members
-Description: Assigns a user to the project.
-Path Parameter: id (int) - Project ID.
-Request Body (JSON):JSON{
-"userId": "int"
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "userName": "johndoe",
+    "email": "user@example.com",
+    "fullName": "John Doe"
+  }
 }
-Response:
-200 OK: Member assigned.
-404 Not Found: Project or user not found.
+```
 
-5. Remove Member from Project
+#### 2. Update Current User Profile
 
-Endpoint: DELETE /api/projects/{id}/members/{userId}
-Description: Removes a user from the project.
-Path Parameters:
-id (int) - Project ID.
-userId (int) - User ID.
+```http
+Put /api/users/me
+Authorization: Bearer YOUR_JWT_TOKEN
+Content-Type: application/json
 
-Response:
-204 No Content: Member removed.
-404 Not Found: Project or user not found.
-
-6. Get Projects (with Pagination)
-
-Endpoint: GET /api/projects?page={page}&pageSize={pageSize}
-Description: Retrieves a paginated list of projects.
-Query Parameters:
-page (int, optional, default: 1)
-pageSize (int, optional, default: 10)
-
-Response:
-200 OK: Paginated list of Project DTOs (includes total count, current page, etc.).
-
-Tasks
-Tasks are associated with projects. CRUD operations with status, priority, due date, and assignment.
-
-1. Create Task
-
-Endpoint: POST /api/tasks
-Description: Creates a new task in a project.
-Request Body (JSON):JSON{
-"projectId": "int",
-"title": "string",
-"description": "string",
-"status": "Backlog" | "InProgress" | "Done",
-"priority": "Low" | "Medium" | "High",
-"dueDate": "YYYY-MM-DD",
-"assignedUserId": "int" // Optional
+{
+  "userName": "newusername",
+  "email": "newemail@example.com",
+  "fullName": "John Updated"
 }
-Response:
-201 Created: Task created (returns Task DTO).
+```
 
-2. Update Task
+**Response:**
 
-Endpoint: PUT /api/tasks/{id}
-Description: Updates an existing task.
-Path Parameter: id (int) - Task ID.
-Request Body (JSON): Same as create, excluding projectId.
-Response:
-200 OK: Task updated.
-404 Not Found: Task not found.
-
-3. Delete Task
-
-Endpoint: DELETE /api/tasks/{id}
-Description: Deletes a task.
-Path Parameter: id (int) - Task ID.
-Response:
-204 No Content: Task deleted.
-404 Not Found: Task not found.
-
-4. Get Task by ID
-
-Endpoint: GET /api/tasks/{id}
-Description: Retrieves a single task.
-Path Parameter: id (int) - Task ID.
-Response:
-200 OK: Task DTO.
-404 Not Found: Task not found.
-
-5. Get Tasks (with Pagination and Filtering)
-
-Endpoint: GET /api/tasks?page={page}&pageSize={pageSize}&status={status}&projectId={projectId}&assignedUserId={assignedUserId}&dueDate={dueDate}
-Description: Retrieves a paginated and filtered list of tasks.
-Query Parameters:
-page (int, optional, default: 1)
-pageSize (int, optional, default: 10)
-status (string, optional): "Backlog" | "InProgress" | "Done"
-projectId (int, optional)
-assignedUserId (int, optional)
-dueDate (string, optional): "YYYY-MM-DD" (filters tasks due on or before this date)
-
-Response:
-200 OK: Paginated list of Task DTOs.
-
-6. Assign Task to User
-
-Endpoint: PUT /api/tasks/{id}/assign
-Description: Assigns a task to a user.
-Path Parameter: id (int) - Task ID.
-Request Body (JSON):JSON{
-"userId": "int"
+```json
+{
+  "success": true,
+  "message": "Profile updated successfully",
+  "data": {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "userName": "newusername",
+    "email": "newemail@example.com",
+    "fullName": "John Updated"
+  }
 }
-Response:
-200 OK: Task assigned.
-404 Not Found: Task or user not found.
+```
 
-Error Handling
-All responses use the ServiceResult<> pattern:
+#### 3. Get List of Users
 
-Success: { "success": true, "data": {...}, "message": "string" }
-Failure: { "success": false, "errors": ["string"], "message": "string" }
+```http
+Get /api/users
+Authorization: Bearer YOUR_JWT_TOKEN
 
-Swagger Integration
-Run the API and navigate to /swagger for interactive testing. Authentication is supported via Swagger's authorize button.
-Notes
+Filter :
+- searchTerm (optional): Filter by username or full name (case-insensitive).
+- SortBy (optional): Sorting by userName or fullName.
+- SortOrder (optional): asc or desc. Default: asc.
+- pageNumber (default: 1)
+- pageSize (default: 10, max: 100)
 
-Roles: Admins can access all resources; Users are limited to their own or assigned projects/tasks.
-Database: Uses Sqlite for development; configure connection string in appsettings.json.
-AutoMapper: Configured directly in the application layer for DTO-entity mapping.
-Pagination: All list endpoints support pagination for efficient data retrieval.
+example :
+/api/users?searchTerm=john&SortBy=userName&SortOrder=asc&pageNumber=1&pageSize=10
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "items": [
+      {
+        "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "userName": "johndoe",
+        "fullName": "John Doe"
+      }
+    ],
+    "totalCount": 1,
+    "pageNumber": 1,
+    "pageSize": 10,
+    "totalPages": 1
+  }
+}
+```
+
+### Projects
+
+#### 1. Get User Projects
+
+```http
+Get /api/projects
+Authorization: Bearer YOUR_JWT_TOKEN
+
+Filter :
+- searchTerm (optional): Filter by project name or description.
+- SortBy (optional): Field to sort by (name, createdAt). Default: createdAt.
+- SortOrder (optional): asc or desc. Default: asc.
+- pageNumber (default: 1)
+- pageSize (default: 10, max: 100)
+
+example :
+/api/projects?searchTerm=api&sortBy=name&sortOrder=asc&pageNumber=1&pageSize=10
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "items": [
+      {
+        "id": "b7f3b2a1-1234-5678-9abc-def012345678",
+        "name": "API Development",
+        "description": "Build the REST API",
+        "createdAt": "2025-02-01T10:00:00Z",
+        "ownerId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "ownerName": "johndoe",
+        "members": [
+          {
+            "userId": "a1b2c3d4-...",
+            "userName": "janedoe",
+            "email": "jane@example.com"
+          }
+        ]
+      }
+    ],
+    "totalCount": 1,
+    "pageNumber": 1,
+    "pageSize": 10,
+    "totalPages": 1
+  }
+}
+```
+
+#### 2. Get Project by ID
+
+```http
+Get /api/projects/{id}
+Authorization: Bearer YOUR_JWT_TOKEN
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "id": "b7f3b2a1-1234-5678-9abc-def012345678",
+    "name": "API Development",
+    "description": "Build the REST API",
+    "createdAt": "2025-02-01T10:00:00Z",
+    "ownerId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "ownerName": "johndoe",
+    "members": [...]
+  }
+}
+```
+
+#### 3. Create Project
+
+```http
+Post /api/projects
+Authorization: Bearer YOUR_JWT_TOKEN
+Content-Type: application/json
+
+{
+  "name": "New Project",
+  "description": "Project description"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "id": "c8d4e5f6-...",
+    "name": "New Project",
+    "description": "Project description",
+    "createdAt": "2025-02-17T10:00:00Z",
+    "ownerId": "...",
+    "ownerName": "johndoe",
+    "members": []
+  }
+}
+```
+
+#### 4. Update Project
+
+```http
+Put /api/projects
+Authorization: Bearer YOUR_JWT_TOKEN
+Content-Type: application/json
+
+{
+  "id": "b7f3b2a1-...",
+  "name": "Updated Name",
+  "description": "Updated description"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    ... updated project ...
+  }
+}
+```
+
+#### 5. Delete Project
+
+```http
+DELETE /api/projects/{id}
+Authorization: Bearer YOUR_JWT_TOKEN
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Project deleted successfully",
+  "data": true
+}
+```
+
+#### 6. Assign Member to Project
+
+```http
+POST /assign-member
+Authorization: Bearer YOUR_JWT_TOKEN
+Content-Type: application/json
+
+{
+  "projectId": "b7f3b2a1-...",
+  "userId": "a1b2c3d4-..."
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Member assigned successfully",
+  "data": true
+}
+```
+
+#### 7. Remove Member from Project
+
+```http
+DELETE /{projectId}/members/{memberId}
+Authorization: Bearer YOUR_JWT_TOKEN
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Member removed successfully",
+  "data": true
+}
+```
+
+### Tasks
+
+#### 1. Get Tasks
+
+```http
+Get /api/task
+Authorization: Bearer YOUR_JWT_TOKEN
+
+Filter :
+- status (optional): 0 = Backlog, 1 = InProgress, 2 = Done
+- priority (optional): 0 = Low, 1 = Medium, 2 = High
+- projectId (optional): Filter by project.
+- assignedUserId (optional): Filter by assigned user.
+- dueDateFrom (optional): Start of due date range (ISO 8601).
+- dueDateTo (optional): End of due date range.
+- searchTerm (optional): Search in title and description.
+- sortBy (optional): Field to sort by (title, status, priority, dueDate, createdAt). Default: dueDate.
+- sortOrder (optional): asc or desc. Default: asc.
+- pageNumber (default: 1)
+- pageSize (default: 10)
+
+example :
+GET /api/tasks?status=1&priority=2&projectId=b7f3b2a1-...&searchTerm=bug&sortBy=dueDate&sortOrder=desc&pageNumber=1&pageSize=10
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "items": [
+      {
+        "id": "d9e6f7g8-...",
+        "title": "Fix login bug",
+        "description": "Users cannot log in",
+        "status": 1,
+        "priority": 2,
+        "dueDate": "2025-02-20T00:00:00Z",
+        "createdAt": "2025-02-17T10:00:00Z",
+        "projectId": "b7f3b2a1-...",
+        "assignedUserId": "a1b2c3d4-...",
+        "assignedUserName": "janedoe"
+      }
+    ],
+    "totalCount": 1,
+    "pageNumber": 1,
+    "pageSize": 10,
+    "totalPages": 1
+  }
+}
+```
+
+#### 2. Get Task by ID
+
+```http
+Get /api/tasks/{id}
+Authorization: Bearer YOUR_JWT_TOKEN
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "id": "d9e6f7g8-...",
+    "title": "Fix login bug",
+    "description": "Users cannot log in",
+    "status": 1,
+    "priority": 2,
+    "dueDate": "2025-02-20T00:00:00Z",
+    "createdAt": "2025-02-17T10:00:00Z",
+    "projectId": "b7f3b2a1-...",
+    "assignedUserId": "a1b2c3d4-...",
+    "assignedUserName": "janedoe"
+  }
+}
+```
+
+#### 3. Create Task
+
+```http
+Post /api/tasks
+Authorization: Bearer YOUR_JWT_TOKEN
+Content-Type: application/json
+
+{
+  "title": "Implement search",
+  "description": "Add search to tasks",
+  "status": 0,
+  "priority": 1,
+  "dueDate": "2025-02-25T00:00:00Z",
+  "projectId": "b7f3b2a1-...",
+  "assignedUserId": "a1b2c3d4-..."
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    ... created task ...
+  }
+}
+```
+
+#### 4. Update Taks
+
+```http
+Put /api/taks
+Authorization: Bearer YOUR_JWT_TOKEN
+Content-Type: application/json
+
+{
+  "id": "d9e6f7g8-...",
+  "title": "Updated title",
+  "description": "Updated description",
+  "status": 1,
+  "priority": 2,
+  "dueDate": "2025-02-28T00:00:00Z",
+  "projectId": "b7f3b2a1-...",
+  "assignedUserId": "a1b2c3d4-..."
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    ... updated task ...
+  }
+}
+```
+
+#### 5. Delete Task
+
+```http
+DELETE /api/task/{id}
+Authorization: Bearer YOUR_JWT_TOKEN
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Task deleted successfully",
+  "data": true
+}
+```
+
+#### 6. Assign Task to User
+
+```http
+POST /{taskId}/assign/{userId}
+Authorization: Bearer YOUR_JWT_TOKEN
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Task assigned successfully",
+  "data": true
+}
+```
+
+### Notes on Filtering, Pagination, and Sorting
+
+- All filter parameters are optional.
+- Pagination parameters pageNumber and pageSize apply to all list endpoints.
+- Sorting is case-insensitive; use the exact property names as defined in the DTO (e.g., dueDate, createdAt).
+- For sortBy, you can use dot notation for nested properties (e.g., project.name) if needed, but check allowed fields per endpoint.
+- Date filters (dueDateFrom, dueDateTo) should be provided in ISO 8601 format (e.g., 2025-02-20T00:00:00Z).
+
+### Error Handling
+
+When a request fails, the API returns an appropriate HTTP status code and a response body with success: false and an error message.
+
+Example (400 Bad Request):
+
+```json
+{
+  "success": false,
+  "message": "Validation failed",
+  "errors": ["Title is required", "Due date must be in the future"]
+}
+```
+
+#### Common status codes:
+
+- 200 – OK
+- 201 – Created
+- 400 – Bad Request (validation error)
+- 401 – Unauthorized (missing or invalid token)
+- 403 – Forbidden (insufficient permissions)
+- 404 – Not Found
+- 500 – Internal Server Error
