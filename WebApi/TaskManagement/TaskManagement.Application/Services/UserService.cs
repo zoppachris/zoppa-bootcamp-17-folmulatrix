@@ -29,7 +29,9 @@ namespace TaskManagement.Application.Services
             if (user == null)
                 return ServiceResult<UserProfileDto>.Fail("User not found", 404);
 
+             var roles = await _userManager.GetRolesAsync(user);
             var userDto = _mapper.Map<UserProfileDto>(user);
+            userDto.Role = roles.ToList()[0];
 
             return ServiceResult<UserProfileDto>.Ok(userDto);
         }
