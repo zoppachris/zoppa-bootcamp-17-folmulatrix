@@ -52,7 +52,7 @@ export default function TaskDetailPage() {
       const data = await apiGet<Task>(`/tasks/${id}`);
       setTask(data);
     } catch (err: any) {
-      setError(err.message || "Failed to load task");
+      setError(err instanceof Error ? err.message : "Failed to load task");
     } finally {
       setLoading(false);
     }
@@ -69,7 +69,7 @@ export default function TaskDetailPage() {
       router.push("/tasks");
       router.refresh();
     } catch (err: any) {
-      setError(err.message || "Failed to delete task");
+      setError(err instanceof Error ? err.message : "Failed to delete task");
       setDeleteLoading(false);
     }
   };

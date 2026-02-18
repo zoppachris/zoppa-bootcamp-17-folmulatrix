@@ -64,7 +64,7 @@ export default function TaskForm({ taskId, onSuccess }: TaskFormProps) {
           assignedUserId: task.assignedUserId || "none",
         });
       } catch (err: any) {
-        setError(err.message || "Gagal memuat data task");
+        setError(err instanceof Error ? err.message : "Failed to load task");
       } finally {
         setInitialLoading(false);
       }
@@ -83,7 +83,7 @@ export default function TaskForm({ taskId, onSuccess }: TaskFormProps) {
         const project = await apiGet<Project>(`/projects/${selectedProjectId}`);
         setProjectMembers(project.members || []);
       } catch (err) {
-        console.error("Gagal memuat anggota project:", err);
+        console.error("Failed load member to project:", err);
       }
     };
     fetchProjectMembers();
@@ -106,40 +106,39 @@ export default function TaskForm({ taskId, onSuccess }: TaskFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError('');
     setLoading(true);
 
     try {
-      if (!selectedProjectId) throw new Error("Project must be selected");
-      if (!formData.title) throw new Error("Title need to fill");
+      if (!selectedProjectId) throw new Error('Need select project');
+      if (!formData.title) throw new Error('Need fill title');
 
       const payload = {
         title: formData.title,
         description: formData.description,
         status: parseInt(formData.status),
         priority: parseInt(formData.priority),
-        dueDate: formData.dueDate
-          ? new Date(formData.dueDate).toISOString()
-          : null,
+        dueDate: formData.dueDate ? new Date(formData.dueDate).toISOString() : null,
         projectId: selectedProjectId,
-        assignedUserId:
-          formData.assignedUserId === "none" ? null : formData.assignedUserId,
+        assignedUserId: formData.assignedUserId === 'none' ? null : formData.assignedUserId,
       };
 
       if (isEdit) {
         await apiPut<Task>(`/tasks/${taskId}`, { ...payload, id: taskId });
       } else {
-        await apiPost<Task>("/tasks", payload);
+        await apiPost<Task>('/tasks', payload);
       }
 
       if (onSuccess) {
         onSuccess();
       } else {
-        router.push("/tasks");
+        router.push('/tasks');
         router.refresh();
       }
     } catch (err: any) {
-      setError(err.message || "Gagal menyimpan task");
+      setError(err instanceof Error ? err.message : 'Failed to save task');
+
+      console.error('Task form error:', err);
     } finally {
       setLoading(false);
     }

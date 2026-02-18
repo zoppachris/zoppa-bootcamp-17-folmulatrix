@@ -42,7 +42,7 @@ export default function ProfileForm() {
       router.push("/dashboard");
       router.refresh();
     } catch (err: any) {
-      setError(err.message || "Failed to load update profile");
+      setError(err instanceof Error ? err.message : "Failed to load update profile");
     } finally {
       setLoading(false);
     }

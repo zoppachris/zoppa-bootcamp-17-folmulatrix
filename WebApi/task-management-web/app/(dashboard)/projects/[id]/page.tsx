@@ -43,7 +43,7 @@ export default function ProjectDetailPage() {
       const data = await apiGet<Project>(`/projects/${id}`);
       setProject(data);
     } catch (err: any) {
-      setError(err.message || 'Failed to load project');
+      setError(err instanceof Error ? err.message :  'Failed to load project');
       toast.error("Failed to load project");
     } finally {
       setLoading(false);
@@ -67,7 +67,7 @@ export default function ProjectDetailPage() {
       router.push('/projects');
       router.refresh();
     } catch (err: any) {
-      toast.error("Failed to delete project");
+      toast.error(err instanceof Error ? err.message : "Failed to delete project");
       setDeleteLoading(false);
       setDeleteDialogOpen(false);
     }
@@ -88,7 +88,7 @@ export default function ProjectDetailPage() {
 
       setRemoveMemberId(null);
     } catch (err: any) {
-      toast.error("Failed to delete member");
+      toast.error(err instanceof Error ? err.message : "Failed to delete member");
     }
   };
 

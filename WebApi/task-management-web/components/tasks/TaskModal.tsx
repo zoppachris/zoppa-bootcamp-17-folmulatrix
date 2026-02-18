@@ -97,10 +97,10 @@ export default function TaskModal({
         priority: parseInt(formData.priority),
         dueDate: formData.dueDate
           ? new Date(formData.dueDate).toISOString()
-          : null,
+          : "",
         projectId,
         assignedUserId:
-          formData.assignedUserId === "none" ? null : formData.assignedUserId,
+          formData.assignedUserId === "none" ? "" : formData.assignedUserId,
       };
 
       if (task) {
@@ -112,7 +112,7 @@ export default function TaskModal({
       onSuccess();
       onOpenChange(false);
     } catch (err: any) {
-      setError(err.message || "Gagal menyimpan task");
+      setError(err instanceof Error ? err.message : "Failed to save task");
     } finally {
       setLoading(false);
     }

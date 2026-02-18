@@ -29,7 +29,7 @@ export default function LoginForm() {
     try {
       await login({ email, password });
     } catch (err: any) {
-      setError(err.message || "Login failed");
+      setError(err instanceof Error ? err.message : "Login failed");
     }
   };
 

@@ -59,7 +59,7 @@ export default function AddMemberModal({
         setUsers(filtered);
         setTotalPages(data.totalPages);
       } catch (err: any) {
-        setError(err.message);
+        setError(err instanceof Error ? err.message : "Failed to load users");
       } finally {
         setLoading(false);
       }
@@ -91,7 +91,7 @@ export default function AddMemberModal({
       onMemberAdded();
       onOpenChange(false);
     } catch (err: any) {
-      setError(err.message);
+      setError(err instanceof Error ? err.message : "Failed to add member");
     } finally {
       setSubmitting(false);
     }

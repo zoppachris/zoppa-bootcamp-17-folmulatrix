@@ -62,7 +62,7 @@ export default function ProjectTaskList({
       });
       setTasks(data.items || []);
     } catch (err: any) {
-      setError(err.message || "Failed to load task");
+      setError(err instanceof Error ? err.message : "Failed to load task");
     } finally {
       setLoading(false);
     }
@@ -79,7 +79,7 @@ export default function ProjectTaskList({
       setTasks(tasks.filter((t) => t.id !== deleteTaskId));
       setDeleteTaskId(null);
     } catch (err: any) {
-      setError(err.message || "Failed to delete task");
+      setError(err instanceof Error ? err.message : "Failed to delete task");
     }
   };
 

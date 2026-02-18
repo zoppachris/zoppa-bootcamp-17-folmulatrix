@@ -22,7 +22,7 @@ export default function EditProjectPage() {
         const data = await apiGet<Project>(`/projects/${id}`);
         setProject(data);
       } catch (err: any) {
-        setError(err.message || "Failed to load project");
+        setError(err instanceof Error ? err.message : "Failed to load project");
       } finally {
         setLoading(false);
       }

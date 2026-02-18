@@ -41,7 +41,7 @@ export default function TaskList() {
       setTasks(data.items);
       setError("");
     } catch (err: any) {
-      setError(err.message || "Failed to load task");
+      setError(err instanceof Error ? err.message : "Failed to load task");
       console.error("Error fetching tasks:", err);
     } finally {
       setLoading(false);

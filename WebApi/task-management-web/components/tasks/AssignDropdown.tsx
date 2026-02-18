@@ -53,8 +53,7 @@ export default function AssignDropdown({ taskId, members, currentAssigneeId, onA
 
       if (onAssign) onAssign();
     } catch (err: any) {
-      setError(err.message);
-      console.error('Failed to assign task:', err);
+      setError(err instanceof Error ? err.message : 'Failed to assign task');
     } finally {
       setLoading(false);
     }
