@@ -30,7 +30,6 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// Blokir method lain
 export async function POST() {
   return methodNotAllowed(["GET"]);
 }

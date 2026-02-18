@@ -18,7 +18,7 @@ import { Project } from "@/types";
 
 interface ProjectFormProps {
   initialData?: Partial<Project>;
-  projectId?: string; // untuk mode edit
+  projectId?: string;
   onSuccess?: () => void;
 }
 

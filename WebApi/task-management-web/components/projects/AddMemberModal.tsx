@@ -55,7 +55,6 @@ export default function AddMemberModal({
         if (debouncedSearch) params.searchTerm = debouncedSearch;
 
         const data = await apiGet<PaginatedResponse<User>>('/users', params);
-        // Filter out existing members
         const filtered = data.items.filter((u) => !existingMemberIds.includes(u.id));
         setUsers(filtered);
         setTotalPages(data.totalPages);

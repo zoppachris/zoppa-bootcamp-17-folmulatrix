@@ -22,7 +22,7 @@ export async function apiGet<T>(
     });
   }
   const res = await fetch(url.toString(), {
-    credentials: "include", // for cookie
+    credentials: "include",
   });
   return handleResponse<T>(res);
 }

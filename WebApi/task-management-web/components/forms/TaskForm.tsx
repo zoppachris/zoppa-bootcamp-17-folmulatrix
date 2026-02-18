@@ -26,8 +26,8 @@ import { ProjectCombobox } from "@/components/ui/ProjectCombobox";
 import { UserCombobox } from "@/components/ui/UserCombobox";
 
 interface TaskFormProps {
-  taskId?: string; // Jika ada, mode edit
-  onSuccess?: () => void; // Callback opsional setelah sukses
+  taskId?: string;
+  onSuccess?: () => void;
 }
 
 export default function TaskForm({ taskId, onSuccess }: TaskFormProps) {
@@ -48,7 +48,6 @@ export default function TaskForm({ taskId, onSuccess }: TaskFormProps) {
     assignedUserId: "none",
   });
 
-  // Fetch data task jika mode edit
   useEffect(() => {
     if (!isEdit) return;
 
@@ -102,7 +101,6 @@ export default function TaskForm({ taskId, onSuccess }: TaskFormProps) {
 
   const handleProjectChange = (projectId: string, projectName: string) => {
     setSelectedProjectId(projectId);
-    // Reset assignee ketika project berubah
     setFormData((prev) => ({ ...prev, assignedUserId: "none" }));
   };
 

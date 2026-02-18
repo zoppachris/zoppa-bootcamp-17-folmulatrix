@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
                 secure: process.env.NODE_ENV === 'production',
                 sameSite: 'lax',
                 path: '/',
-                maxAge: 60 * 60 * 24, // 1 hari
+                maxAge: 60 * 60 * 24,
             });
 
             (await cookieStore).set('refresh_token', data.data.refreshToken, {

@@ -50,7 +50,6 @@ export interface ApiResponse<T> {
   errors?: string[];
 }
 
-// Auth
 export interface LoginCredentials {
   email: string;
   password: string;
@@ -69,7 +68,6 @@ export interface AuthResponse {
   expiration: string;
 }
 
-// Filter params
 export interface ProjectFilter {
   searchTerm?: string;
   sortBy?: string;
