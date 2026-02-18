@@ -14,16 +14,19 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function RegisterForm() {
+  const router = useRouter();
   const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    userName: "",
-    fullName: "",
+    email: '',
+    password: '',
+    userName: '',
+    fullName: '',
   });
-  const [error, setError] = useState("");
-  const { register, isLoading } = useAuth();
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { refreshUser } = useAuth();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -31,11 +34,30 @@ export default function RegisterForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError('');
+    setLoading(true);
+
     try {
-      await register(formData);
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Registrasi failed');
+      }
+
+      await refreshUser();
+
+      router.push('/dashboard');
+      router.refresh();
     } catch (err: any) {
-      setError(err.message || "Registration failed");
+      setError(err.message || 'Registrasi failed');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -94,8 +116,8 @@ export default function RegisterForm() {
           {error && <p className="text-sm text-red-500">{error}</p>}
         </CardContent>
         <CardFooter className="flex flex-col space-y-2">
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Loading..." : "Register"}
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? "Loading..." : "Register"}
           </Button>
           <p className="text-sm text-center">
             Already have an account?{" "}

@@ -36,7 +36,25 @@ namespace TaskManagement.Application.Services
 
         public async Task<ServiceResult<AuthResponseDto>> RegisterAsync(RegisterDto registerDto)
         {
-            var user = new AppUser { UserName = registerDto.UserName, Email = registerDto.Email };
+            var existingUserByEmail = await _userManager.FindByEmailAsync(registerDto.Email);
+            if (existingUserByEmail != null)
+            {
+                return ServiceResult<AuthResponseDto>.Fail("Email is already registered.");
+            }
+
+            var existingUserByUserName = await _userManager.FindByNameAsync(registerDto.UserName);
+            if (existingUserByUserName != null)
+            {
+                return ServiceResult<AuthResponseDto>.Fail("Username is already taken.");
+            }
+
+            var user = new AppUser
+            {
+                UserName = registerDto.UserName,
+                Email = registerDto.Email,
+                FullName = registerDto.FullName
+            };
+
             var result = await _userManager.CreateAsync(user, registerDto.Password);
             if (!result.Succeeded)
             {

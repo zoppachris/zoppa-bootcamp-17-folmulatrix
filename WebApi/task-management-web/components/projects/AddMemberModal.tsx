@@ -1,21 +1,21 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Check, Loader2, Search, UserPlus } from "lucide-react";
-import { apiGet, apiPost } from "@/lib/api/client";
-import { User, PaginatedResponse } from "@/types";
-import { useDebounce } from "@/hooks/useDebounce";
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Check, Loader2, Search, UserPlus } from 'lucide-react';
+import { apiGet } from '@/lib/api/client';
+import { User, PaginatedResponse } from '@/types';
+import { useDebounce } from '@/hooks/useDebounce';
 
 interface AddMemberModalProps {
   open: boolean;
@@ -32,7 +32,7 @@ export default function AddMemberModal({
   existingMemberIds,
   onMemberAdded,
 }: AddMemberModalProps) {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearch = useDebounce(searchTerm, 500);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
@@ -40,7 +40,7 @@ export default function AddMemberModal({
   const [totalPages, setTotalPages] = useState(1);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (!open) return;
@@ -54,11 +54,9 @@ export default function AddMemberModal({
         };
         if (debouncedSearch) params.searchTerm = debouncedSearch;
 
-        const data = await apiGet<PaginatedResponse<User>>("/users", params);
+        const data = await apiGet<PaginatedResponse<User>>('/users', params);
         // Filter out existing members
-        const filtered = data.items.filter(
-          (u) => !existingMemberIds.includes(u.id),
-        );
+        const filtered = data.items.filter((u) => !existingMemberIds.includes(u.id));
         setUsers(filtered);
         setTotalPages(data.totalPages);
       } catch (err: any) {
@@ -74,12 +72,23 @@ export default function AddMemberModal({
   const handleAddMember = async () => {
     if (!selectedUserId) return;
     setSubmitting(true);
-    setError("");
+    setError('');
     try {
-      await apiPost("/projects/assign-member", {
-        projectId,
-        userId: selectedUserId,
+      const res = await fetch('/api/projects/assign-member', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projectId,
+          userId: selectedUserId,
+        }),
       });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Failed to add member');
+      }
+
       onMemberAdded();
       onOpenChange(false);
     } catch (err: any) {
@@ -90,10 +99,10 @@ export default function AddMemberModal({
   };
 
   const resetState = () => {
-    setSearchTerm("");
+    setSearchTerm('');
     setPage(1);
     setSelectedUserId(null);
-    setError("");
+    setError('');
   };
 
   return (
@@ -106,13 +115,13 @@ export default function AddMemberModal({
     >
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add Member to Project</DialogTitle>
+          <DialogTitle>Add member to project</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="relative">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search for users by name or username..."
+              placeholder="Search by fullname or username..."
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -129,18 +138,15 @@ export default function AddMemberModal({
               </div>
             ) : users.length === 0 ? (
               <p className="text-center text-gray-500 py-4">
-                {searchTerm
-                  ? "There are no matching users"
-                  : "There are no users available"}
+                {searchTerm ? 'No user matched' : 'No user available'}
               </p>
             ) : (
               <div className="space-y-2">
                 {users.map((user) => (
                   <div
                     key={user.id}
-                    className={`flex items-center justify-between p-2 rounded-md cursor-pointer hover:bg-gray-100 ${
-                      selectedUserId === user.id ? "bg-gray-200" : ""
-                    }`}
+                    className={`flex items-center justify-between p-2 rounded-md cursor-pointer hover:bg-gray-100 ${selectedUserId === user.id ? 'bg-gray-200' : ''
+                      }`}
                     onClick={() => setSelectedUserId(user.id)}
                   >
                     <div className="flex items-center gap-3">
@@ -151,12 +157,10 @@ export default function AddMemberModal({
                       </Avatar>
                       <div>
                         <p className="font-medium">{user.fullName}</p>
-                        <p className="text-sm text-gray-500">{user.userName}</p>
+                        <p className="text-sm text-gray-500">{user.email}</p>
                       </div>
                     </div>
-                    {selectedUserId === user.id && (
-                      <Check className="h-4 w-4 text-green-600" />
-                    )}
+                    {selectedUserId === user.id && <Check className="h-4 w-4 text-green-600" />}
                   </div>
                 ))}
               </div>
@@ -191,12 +195,9 @@ export default function AddMemberModal({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            Batal
           </Button>
-          <Button
-            onClick={handleAddMember}
-            disabled={!selectedUserId || submitting}
-          >
+          <Button onClick={handleAddMember} disabled={!selectedUserId || submitting}>
             {submitting ? (
               <Loader2 className="h-4 w-4 animate-spin mr-2" />
             ) : (
