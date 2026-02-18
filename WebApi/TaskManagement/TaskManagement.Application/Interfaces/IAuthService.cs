@@ -8,5 +8,6 @@ namespace TaskManagement.Application.Interfaces
         Task<ServiceResult<AuthResponseDto>> RegisterAsync(RegisterDto registerDto);
         Task<ServiceResult<AuthResponseDto>> LoginAsync(LoginDto loginDto);
         Task<ServiceResult<AuthResponseDto>> RefreshTokenAsync(string refreshToken);
+        Task<ServiceResult<bool>> LogoutAsync(string refreshToken);
     }
 }

@@ -9,7 +9,11 @@ import {
   FolderKanban,
   CheckSquare,
   Shield,
+  Loader2,
+  LogOut,
 } from "lucide-react";
+import { useState } from "react";
+import { Button } from "../ui/button";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -19,14 +23,22 @@ const navigation = [
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const navItems = [
     ...navigation,
-    ...(user?.role === "Admin"
-      ? [{ name: "Admin", href: "/admin", icon: Shield }]
-      : []),
+    ...(user?.role === 'Admin' ? [{ name: 'Admin', href: '/admin', icon: Shield }] : []),
   ];
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await logout();
+    } finally {
+      setLoggingOut(false);
+    }
+  };
 
   return (
     <aside className="w-64 border-r min-h-screen">
@@ -49,6 +61,22 @@ export default function Sidebar() {
             );
           })}
         </nav>
+      </div>
+
+      <div className="p-4 border-t">
+        <Button
+          variant="ghost"
+          className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+          onClick={handleLogout}
+          disabled={loggingOut}
+        >
+          {loggingOut ? (
+            <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+          ) : (
+            <LogOut className="h-5 w-5 mr-2" />
+          )}
+          {loggingOut ? 'Logging out...' : 'Logout'}
+        </Button>
       </div>
     </aside>
   );

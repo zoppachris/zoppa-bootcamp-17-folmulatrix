@@ -60,28 +60,29 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
 
     const backendRes = await fetchWithAuth(req, `/api/projects/${id}`, {
-      method: "DELETE",
+      method: 'DELETE',
     });
     const data = await backendRes.json();
 
     if (!backendRes.ok) {
       return NextResponse.json(
-        { message: data.message },
-        { status: backendRes.status },
+        { success: false, message: data.message },
+        { status: backendRes.status }
       );
     }
 
     return NextResponse.json(data);
   } catch (error) {
+    console.error('Error in DELETE /api/projects/[id]:', error);
     return NextResponse.json(
-      { message: "Internal server error" },
-      { status: 500 },
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
     );
   }
 }

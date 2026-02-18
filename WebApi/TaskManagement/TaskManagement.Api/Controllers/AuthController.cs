@@ -41,7 +41,7 @@ namespace TaskManagement.Api.Controllers
         {
             var validator = new LoginDtoValidator();
             var validationResult = await validator.ValidateAsync(loginDto);
-            
+
             if (!validationResult.IsValid)
             {
                 return BadRequest(ApiResponse<AuthResponseDto>.Fail("Login failed",
@@ -55,12 +55,23 @@ namespace TaskManagement.Api.Controllers
             return Ok(ApiResponse<AuthResponseDto>.Ok(result.Data!));
         }
 
+        [HttpPost("logout")]
+        public async Task<ActionResult<ApiResponse<bool>>> Logout(RefreshTokenDto refreshTokenDto)
+        {
+            var result = await _authService.LogoutAsync(refreshTokenDto.RefreshToken);
+
+            if (!result.Success)
+                return Unauthorized(ApiResponse<bool>.Fail(result.Message!));
+
+            return Ok(ApiResponse<bool>.Ok(true, "Logged out successfully"));
+        }
+
         [HttpPost("refresh-token")]
         public async Task<ActionResult<ApiResponse<AuthResponseDto>>> RefreshToken(RefreshTokenDto refreshTokenDto)
         {
             var validator = new RefreshTokenDtoValidator();
             var validationResult = await validator.ValidateAsync(refreshTokenDto);
-            
+
             if (!validationResult.IsValid)
             {
                 return BadRequest(ApiResponse<AuthResponseDto>.Fail("Refresh Token failed",

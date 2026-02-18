@@ -61,11 +61,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     setIsLoading(true);
     try {
-      await apiPost("/auth/logout");
+      const res = await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!res.ok) {
+        console.warn('Logout response not OK, but continuing...');
+      }
+    } catch (error) {
+      console.error('Error during logout:', error);
     } finally {
       setUser(null);
       setIsLoading(false);
-      router.push("/login");
+      router.push('/login');
+      router.refresh();
     }
   };
 

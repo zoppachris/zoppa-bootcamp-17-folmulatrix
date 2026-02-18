@@ -108,7 +108,7 @@ export default function ProjectTaskList({
 
       {tasks.length === 0 ? (
         <p className="text-gray-500 text-center py-8">
-          Belum ada task untuk project ini.
+          There is no task yet.
         </p>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

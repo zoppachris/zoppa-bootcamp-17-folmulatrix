@@ -60,7 +60,7 @@ export default function TaskList() {
     return (
       <div className="text-center p-8">
         <p className="text-red-500 mb-4">{error}</p>
-        <Button onClick={fetchTasks}>Coba Lagi</Button>
+        <Button onClick={fetchTasks}>Try again</Button>
       </div>
     );
   }
@@ -68,7 +68,7 @@ export default function TaskList() {
   if (tasks.length === 0) {
     return (
       <div className="text-center p-8">
-        <p className="text-gray-500 mb-4">Belum ada task</p>
+        <p className="text-gray-500 mb-4">There is no task</p>
       </div>
     );
   }

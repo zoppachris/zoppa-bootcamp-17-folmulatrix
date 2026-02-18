@@ -25,9 +25,10 @@ namespace TaskManagement.Infrastructure
                 .AddEntityFrameworkStores<AppDbContext>()
                 .AddDefaultTokenProviders();
 
-            // JWT & Refresh Token Settings
+            // JWT & Refresh and Cleanup Token Settings
             services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
             services.Configure<RefreshTokenSettings>(configuration.GetSection("RefreshToken"));
+            services.AddHostedService<TokenCleanupService>();
 
             // Repositories
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));

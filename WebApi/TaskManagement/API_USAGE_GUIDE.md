@@ -73,7 +73,29 @@ Content-Type: application/json
 }
 ```
 
-#### 3. Refresh Token
+#### 3. Logout
+
+```http
+POST /api/auth/logout
+Content-Type: application/json
+
+{
+  "refreshToken": "a1b2c3d4..."
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Logged out successfully",
+  "data": true,
+  "errors": null
+}
+```
+
+#### 4. Refresh Token
 
 ```http
 POST /api/auth/refresh-token

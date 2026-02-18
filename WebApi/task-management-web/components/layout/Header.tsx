@@ -12,9 +12,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Link from "next/link";
+import { useState } from "react";
+import { Loader2 } from "lucide-react";
 
 export default function Header() {
   const { user, logout } = useAuth();
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const initials =
     user?.fullName
@@ -22,6 +25,15 @@ export default function Header() {
       .map((n) => n[0])
       .join("")
       .toUpperCase() || "U";
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await logout();
+    } finally {
+      setLoggingOut(false);
+    }
+  };
 
   return (
     <header className="border-b px-6 py-3 flex items-center justify-between">
@@ -50,7 +62,20 @@ export default function Header() {
             <DropdownMenuItem asChild>
               <Link href="/profile">Profile</Link>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={logout}>Log out</DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={handleLogout}
+              disabled={loggingOut}
+              className="text-red-600 focus:text-red-600"
+            >
+              {loggingOut ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Logging out...
+                </>
+              ) : (
+                'Log out'
+              )}
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

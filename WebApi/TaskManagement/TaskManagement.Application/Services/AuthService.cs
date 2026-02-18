@@ -114,7 +114,11 @@ namespace TaskManagement.Application.Services
 
         public async Task<ServiceResult<AuthResponseDto>> RefreshTokenAsync(string refreshToken)
         {
-            var tokenEntities = await _refreshTokenRepo.FindAsync(rt => rt.Token == refreshToken && !rt.IsRevoked && rt.ExpiryDate > DateTime.UtcNow);
+            var tokenEntities = await _refreshTokenRepo.FindAsync(rt =>
+                rt.Token == refreshToken &&
+                !rt.IsRevoked &&
+                rt.ExpiryDate > DateTime.UtcNow);
+
             var tokenEntity = tokenEntities.FirstOrDefault();
             if (tokenEntity == null)
                 return ServiceResult<AuthResponseDto>.Fail("Invalid or expired refresh token.");
@@ -125,6 +129,8 @@ namespace TaskManagement.Application.Services
 
             tokenEntity.IsRevoked = true;
             await _refreshTokenRepo.UpdateAsync(tokenEntity);
+
+            await CleanupExpiredTokensForUserAsync(user.Id);
 
             var newAccessToken = await _tokenService.GenerateTokenAsync(user);
             var newRefreshToken = _tokenService.GenerateRefreshToken();
@@ -144,6 +150,36 @@ namespace TaskManagement.Application.Services
                 RefreshToken = newRefreshToken,
                 Expiration = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpiryMinutes)
             });
+        }
+
+        public async Task<ServiceResult<bool>> LogoutAsync(string refreshToken)
+        {
+            var tokens = await _refreshTokenRepo.FindAsync(rt => rt.Token == refreshToken);
+
+            var token = tokens.FirstOrDefault();
+
+            if (token == null)
+                return ServiceResult<bool>.Fail("Invalid or expired refresh token.");
+
+            if (token != null)
+            {
+                token.IsRevoked = true;
+                await _refreshTokenRepo.UpdateAsync(token);
+                // await _refreshTokenRepo.DeleteAsync(token);
+            }
+
+            return ServiceResult<bool>.Ok(true, "Logged out successfully");
+        }
+
+        private async Task CleanupExpiredTokensForUserAsync(Guid userId)
+        {
+            var expiredTokens = await _refreshTokenRepo.FindAsync(rt =>
+                rt.UserId == userId && rt.ExpiryDate < DateTime.UtcNow);
+
+            foreach (var token in expiredTokens)
+            {
+                await _refreshTokenRepo.DeleteAsync(token);
+            }
         }
     }
 }
